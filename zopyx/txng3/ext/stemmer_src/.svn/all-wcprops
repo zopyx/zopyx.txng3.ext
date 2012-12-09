@@ -1,0 +1,17 @@
+K 25
+svn:wc:ra_dav:version-url
+V 84
+/svnroot/textindexng/!svn/ver/2373/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src
+END
+__init__.py
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/__init__.py
+END
+stemmer.c
+K 25
+svn:wc:ra_dav:version-url
+V 94
+/svnroot/textindexng/!svn/ver/2373/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/stemmer.c
+END

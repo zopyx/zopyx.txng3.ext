@@ -1,0 +1,413 @@
+K 25
+svn:wc:ra_dav:version-url
+V 103
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c
+END
+stem_UTF_8_spanish.c
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_spanish.c
+END
+stem_UTF_8_dutch.c
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_dutch.c
+END
+stem_UTF_8_spanish.h
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_spanish.h
+END
+stem_UTF_8_hungarian.c
+K 25
+svn:wc:ra_dav:version-url
+V 126
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_hungarian.c
+END
+stem_UTF_8_dutch.h
+K 25
+svn:wc:ra_dav:version-url
+V 122
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_dutch.h
+END
+stem_UTF_8_hungarian.h
+K 25
+svn:wc:ra_dav:version-url
+V 126
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_hungarian.h
+END
+stem_UTF_8_kraaij_pohlmann.c
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_kraaij_pohlmann.c
+END
+stem_UTF_8_finnish.c
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_finnish.c
+END
+stem_UTF_8_kraaij_pohlmann.h
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_kraaij_pohlmann.h
+END
+stem_UTF_8_finnish.h
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_finnish.h
+END
+stem_ISO_8859_1_swedish.c
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_swedish.c
+END
+stem_ISO_8859_1_swedish.h
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_swedish.h
+END
+stem_UTF_8_portuguese.c
+K 25
+svn:wc:ra_dav:version-url
+V 127
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_portuguese.c
+END
+stem_ISO_8859_1_italian.c
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_italian.c
+END
+stem_UTF_8_french.c
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_french.c
+END
+stem_UTF_8_portuguese.h
+K 25
+svn:wc:ra_dav:version-url
+V 127
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_portuguese.h
+END
+stem_ISO_8859_1_italian.h
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_italian.h
+END
+stem_UTF_8_german.c
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_german.c
+END
+stem_UTF_8_french.h
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_french.h
+END
+stem_UTF_8_porter.c
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_porter.c
+END
+stem_ISO_8859_1_english.c
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_english.c
+END
+stem_ISO_8859_1_norwegian.c
+K 25
+svn:wc:ra_dav:version-url
+V 131
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_norwegian.c
+END
+stem_UTF_8_german.h
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_german.h
+END
+stem_UTF_8_porter.h
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_porter.h
+END
+stem_ISO_8859_1_english.h
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_english.h
+END
+stem_ISO_8859_1_norwegian.h
+K 25
+svn:wc:ra_dav:version-url
+V 131
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_norwegian.h
+END
+stem_UTF_8_russian.c
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_russian.c
+END
+stem_ISO_8859_1_portuguese.c
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_portuguese.c
+END
+stem_ISO_8859_1_french.c
+K 25
+svn:wc:ra_dav:version-url
+V 128
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_french.c
+END
+stem_ISO_8859_1_spanish.c
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_spanish.c
+END
+stem_ISO_8859_2_romanian.c
+K 25
+svn:wc:ra_dav:version-url
+V 130
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_2_romanian.c
+END
+stem_UTF_8_russian.h
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_russian.h
+END
+stem_ISO_8859_1_dutch.c
+K 25
+svn:wc:ra_dav:version-url
+V 127
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_dutch.c
+END
+stem_ISO_8859_1_portuguese.h
+K 25
+svn:wc:ra_dav:version-url
+V 132
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_portuguese.h
+END
+stem_UTF_8_turkish.c
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_turkish.c
+END
+stem_KOI8_R_russian.c
+K 25
+svn:wc:ra_dav:version-url
+V 125
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_KOI8_R_russian.c
+END
+stem_UTF_8_german2.c
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_german2.c
+END
+stem_ISO_8859_1_german.c
+K 25
+svn:wc:ra_dav:version-url
+V 128
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_german.c
+END
+stem_ISO_8859_1_french.h
+K 25
+svn:wc:ra_dav:version-url
+V 128
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_french.h
+END
+stem_ISO_8859_1_spanish.h
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_spanish.h
+END
+stem_ISO_8859_2_romanian.h
+K 25
+svn:wc:ra_dav:version-url
+V 130
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_2_romanian.h
+END
+stem_ISO_8859_1_porter.c
+K 25
+svn:wc:ra_dav:version-url
+V 128
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_porter.c
+END
+stem_ISO_8859_1_hungarian.c
+K 25
+svn:wc:ra_dav:version-url
+V 131
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_hungarian.c
+END
+stem_ISO_8859_1_dutch.h
+K 25
+svn:wc:ra_dav:version-url
+V 127
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_dutch.h
+END
+stem_UTF_8_turkish.h
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_turkish.h
+END
+stem_KOI8_R_russian.h
+K 25
+svn:wc:ra_dav:version-url
+V 125
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_KOI8_R_russian.h
+END
+stem_UTF_8_german2.h
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_german2.h
+END
+stem_ISO_8859_1_german.h
+K 25
+svn:wc:ra_dav:version-url
+V 128
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_german.h
+END
+stem_ISO_8859_1_porter.h
+K 25
+svn:wc:ra_dav:version-url
+V 128
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_porter.h
+END
+stem_ISO_8859_1_hungarian.h
+K 25
+svn:wc:ra_dav:version-url
+V 131
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_hungarian.h
+END
+stem_UTF_8_romanian.c
+K 25
+svn:wc:ra_dav:version-url
+V 125
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_romanian.c
+END
+stem_UTF_8_danish.c
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_danish.c
+END
+stem_UTF_8_swedish.c
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_swedish.c
+END
+stem_UTF_8_romanian.h
+K 25
+svn:wc:ra_dav:version-url
+V 125
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_romanian.h
+END
+stem_UTF_8_lovins.c
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_lovins.c
+END
+stem_UTF_8_danish.h
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_danish.h
+END
+stem_UTF_8_swedish.h
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_swedish.h
+END
+stem_UTF_8_lovins.h
+K 25
+svn:wc:ra_dav:version-url
+V 123
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_lovins.h
+END
+stem_ISO_8859_1_finnish.c
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_finnish.c
+END
+stem_UTF_8_italian.c
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_italian.c
+END
+stem_ISO_8859_1_finnish.h
+K 25
+svn:wc:ra_dav:version-url
+V 129
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_finnish.h
+END
+stem_UTF_8_italian.h
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_italian.h
+END
+stem_ISO_8859_1_danish.c
+K 25
+svn:wc:ra_dav:version-url
+V 128
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_danish.c
+END
+stem_UTF_8_norwegian.c
+K 25
+svn:wc:ra_dav:version-url
+V 126
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_norwegian.c
+END
+stem_UTF_8_english.c
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_english.c
+END
+stem_ISO_8859_1_danish.h
+K 25
+svn:wc:ra_dav:version-url
+V 128
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_ISO_8859_1_danish.h
+END
+stem_UTF_8_norwegian.h
+K 25
+svn:wc:ra_dav:version-url
+V 126
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_norwegian.h
+END
+stem_UTF_8_english.h
+K 25
+svn:wc:ra_dav:version-url
+V 124
+/svnroot/textindexng/!svn/ver/2069/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_english.h
+END

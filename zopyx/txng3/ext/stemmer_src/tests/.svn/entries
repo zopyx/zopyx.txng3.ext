@@ -1,0 +1,153 @@
+10
+
+dir
+2379
+https://textindexng.svn.sourceforge.net/svnroot/textindexng/zopyx.txng3.ext/trunk/zopyx/txng3/ext/stemmer_src/tests
+https://textindexng.svn.sourceforge.net/svnroot/textindexng
+
+
+
+2009-03-14T10:44:13.613726Z
+2069
+ajung
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+aa7bd93b-e50e-0410-b593-92942aa87115
+
+italian
+dir
+
+russian
+dir
+
+__init__.py
+file
+
+
+
+
+2012-12-09T18:01:41.810489Z
+bb7e9881fdf2afde58a40fb3a0573535
+2005-10-23T07:37:31.000000Z
+1352
+ajung
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+14
+
+norwegian
+dir
+
+english
+dir
+
+turkish
+dir
+
+german2
+dir
+
+kraaij_pohlmann
+dir
+
+finnish
+dir
+
+portuguese
+dir
+
+testStemmer.py
+file
+
+
+
+
+2012-12-09T18:01:41.811490Z
+853e957efd9287f59300bf079c0f9809
+2009-03-14T10:44:13.613726Z
+2069
+ajung
+has-props
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+3125
+
+romanian
+dir
+
+french
+dir
+
+spanish
+dir
+
+danish
+dir
+
+swedish
+dir
+
+dutch
+dir
+
+german
+dir
+
+lovins
+dir
+
+porter
+dir
+
+hungarian
+dir
+
