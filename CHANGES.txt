@@ -1,3 +1,10 @@
+3.3.4 (unreleased)
+------------------
+
+- Fix single-character poisoning bug
+  (http://sourceforge.net/p/textindexng/bugs/125/).
+
+
 3.3.3 (2012/05/16)
 ------------------
 - applied patch for 

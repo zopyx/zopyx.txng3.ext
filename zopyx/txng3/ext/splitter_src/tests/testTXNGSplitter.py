@@ -102,6 +102,11 @@ class SplitterTests(unittest.TestCase):
         self._test(SP, 'dies ist §8 b b§b',
                        ['dies', 'ist', '§8', 'b', 'b§b'])
 
+    def testSingleCharCachePoisoning(self):
+        SP = Splitter()
+
+        SP.split(u'D')
+        self.assertEqual(u'D', unicode('D'))
 
 
 def test_suite():
