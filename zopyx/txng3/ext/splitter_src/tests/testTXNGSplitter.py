@@ -108,6 +108,12 @@ class SplitterTests(unittest.TestCase):
         SP.split(u'D')
         self.assertEqual(u'D', unicode('D'))
 
+    def testSingleCharComparisonPoisoning(self):
+        SP = Splitter()
+
+        self.assertEqual(u'D', 'D')
+        SP.split(u'D')
+        self.assertEqual(u'D', 'D')
 
 def test_suite():
     s = unittest.TestSuite()
