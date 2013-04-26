@@ -225,7 +225,10 @@ Splitter_split(Splitter *self, PyObject *args)
         } 
     } else if (PyUnicode_Check(doc)) {
         PyObject *doc1; // create a *real* copy since we need to modify the string
-        doc1 = PyUnicode_FromUnicode(((PyUnicodeObject *) doc)->str, ((PyUnicodeObject*) doc)->length);
+        doc1 = PyUnicode_FromUnicode(NULL, ((PyUnicodeObject*) doc)->length);
+        Py_UNICODE_COPY(((PyUnicodeObject *) doc1)->str,
+                        ((PyUnicodeObject *) doc)->str,
+                        ((PyUnicodeObject*) doc)->length);
         splitUnicodeString(self, doc1);
         Py_DECREF(doc1);
     } else {
