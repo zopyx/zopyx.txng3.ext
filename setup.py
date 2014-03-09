@@ -20,7 +20,7 @@ description_txt = open('README.txt').read()
 description_txt += '\n\nChanges\n-------\n\n'
 description_txt += open('CHANGES.txt').read()
 
-version = '3.3.3.1'
+version = '3.3.3.2'
 
 setup(name="zopyx.txng3.ext",
       version=version,
@@ -36,7 +36,7 @@ setup(name="zopyx.txng3.ext",
       install_requires=('setuptools',),
       test_suite='nose.collector',
       tests_require=('nose',),
-      namespace_packages=('zopyx', 'zopyx.txng3', 'zopyx.txng3.ext'),
+      namespace_packages=('zopyx', 'zopyx.txng3'),
       extras_require=dict(test=()),
           ext_modules=[
 
