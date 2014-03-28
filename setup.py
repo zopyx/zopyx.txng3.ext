@@ -20,7 +20,7 @@ description_txt = open('README.txt').read()
 description_txt += '\n\nChanges\n-------\n\n'
 description_txt += open('CHANGES.txt').read()
 
-version = '3.3.3.3'
+version = '3.3.3.4'
 
 setup(name="zopyx.txng3.ext",
       version=version,
@@ -32,11 +32,11 @@ setup(name="zopyx.txng3.ext",
       description = 'Helper modules for TextIndexNG3 (Snowball stemmer, normalizer, splitter, etc.)',
       long_description = description_txt,
       url = "http://sf.net/projects/textindexng/",
-      py_modules=['zopyx.__init__', 'zopyx.txng3.__init__'],
+      py_modules=['zopyx.__init__', 'zopyx.txng3.__init__', 'zopyx.txng3.ext.__init__'],
       install_requires=('setuptools',),
       test_suite='nose.collector',
       tests_require=('nose',),
-      namespace_packages=('zopyx', 'zopyx.txng3'),
+      namespace_packages=('zopyx', 'zopyx.txng3', 'zopyx.txng3.ext'),
       extras_require=dict(test=()),
           ext_modules=[
 
