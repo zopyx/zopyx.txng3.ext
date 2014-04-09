@@ -1,0 +1,5 @@
+recursive-include src *
+recursive-include docs *
+include *.rst *.txt
+global-exclude *.pyc
+global-exclude .DS_Store

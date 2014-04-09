@@ -1,13 +1,18 @@
+3.3.5 (unreleased)
+------------------
+
+- Fix packaging error, add manifest, add ``.gitignore``.
+  [saily]
+
 3.3.4 (unreleased)
 ------------------
 
 - Fix single-character poisoning bug
   (http://sourceforge.net/p/textindexng/bugs/125/).
 
-
 3.3.3 (2012/05/16)
 ------------------
-- applied patch for 
+- applied patch for
   https://sourceforge.net/tracker/?func=detail&atid=458418&aid=3527329&group_id=50052
 
 3.3.2 (2010/03/10)
