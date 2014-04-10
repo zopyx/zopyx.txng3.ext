@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ###########################################################################
-# TextIndexNG V 3                
+# TextIndexNG V 3
 # The next generation TextIndex for Zope
 #
 # This software is governed by a license. See
@@ -13,14 +13,14 @@ import sys
 import os
 from setuptools import setup, find_packages, Extension
 
-unicode_arg = sys.maxunicode>0xffff and "-DUNICODE_WIDTH=4" or "-DUNICODE_WIDTH=2" 
-ext_args = sys.platform != "win32" and ['-Wall'] or [] 
+unicode_arg = sys.maxunicode>0xffff and "-DUNICODE_WIDTH=4" or "-DUNICODE_WIDTH=2"
+ext_args = sys.platform != "win32" and ['-Wall'] or []
 
 description_txt = open('README.txt').read()
 description_txt += '\n\nChanges\n-------\n\n'
 description_txt += open('CHANGES.txt').read()
 
-version = '3.3.3.4'
+version = '3.3.5'
 
 setup(name="zopyx.txng3.ext",
       version=version,
@@ -47,7 +47,7 @@ setup(name="zopyx.txng3.ext",
             Extension("zopyx.txng3.ext.splitter",
                 [ "zopyx/txng3/ext/splitter_src/splitter.c",
                   "zopyx/txng3/ext/splitter_src/hashtable.c",
-                  "zopyx/txng3/ext/splitter_src/dict.c" 
+                  "zopyx/txng3/ext/splitter_src/dict.c"
                 ],
             ),
 
@@ -97,7 +97,7 @@ setup(name="zopyx.txng3.ext",
                  "zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_swedish.c",
                  "zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_turkish.c",
                 ],
-                include_dirs=['zopyx/txng3/ext/stemmer_src/libstemmer_c/include', 
+                include_dirs=['zopyx/txng3/ext/stemmer_src/libstemmer_c/include',
                               'zopyx/txng3/ext/stemmer_src/libstemmer_c',
                               'zopyx/txng3/ext/stemmer_src/libstemmer_c/libstemmer'],
             ),
