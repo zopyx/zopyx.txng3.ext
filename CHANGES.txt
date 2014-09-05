@@ -1,9 +1,8 @@
-3.3.6 (unreleased)
+3.3.7 (2014/09/05)
 ------------------
 
 - Fix missing namespace declaration on ``ext``level in ``__init__.py`` and 
   avoid recent setuptools to spit and fail.
-
 
 3.3.5 (2014/07/13)
 ------------------
