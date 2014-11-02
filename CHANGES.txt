@@ -1,8 +1,16 @@
-3.3.4 (unreleased)
+3.3.7 (2014/09/05)
+------------------
+
+- Fix missing namespace declaration on ``ext``level in ``__init__.py`` and 
+  avoid recent setuptools to spit and fail.
+
+3.3.5 (2014/07/13)
 ------------------
 
 - Fix single-character poisoning bug
   (http://sourceforge.net/p/textindexng/bugs/125/).
+
+- fixed improper version number
 
 
 3.3.3 (2012/05/16)
