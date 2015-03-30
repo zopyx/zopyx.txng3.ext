@@ -61,7 +61,8 @@ Stemmer_stem (Stemmer * self, PyObject * args)
   PyObject *obj, *list, *item, *encoded, *u_stemmed;
   const sb_symbol *stemmed;
   char *word;
-  int i;
+  Py_ssize_t i;
+  Py_ssize_t len;
 
   if (self == NULL)
 	  {
@@ -85,9 +86,10 @@ Stemmer_stem (Stemmer * self, PyObject * args)
      return NULL;
    }
 
-  list = PyList_New (0);
+  len = PySequence_Length (obj);
+  list = PyList_New (len);
 
-  for (i = 0; i < PyObject_Length (obj); i++)
+  for (i = 0; i < len; i++)
 	  {
 
 		item = PySequence_Fast_GET_ITEM (obj, i);
@@ -100,7 +102,7 @@ Stemmer_stem (Stemmer * self, PyObject * args)
 				PyUnicode_AsEncodedString (item, "UTF-8", "ignore");
 
 			  // -> byte string
-			  word = PyString_AsString (encoded);
+			  word = PyString_AS_STRING (encoded);
 
 			  // now stem
 			  stemmed =
@@ -114,8 +116,7 @@ Stemmer_stem (Stemmer * self, PyObject * args)
 									  sb_stemmer_length (self->stemmer),
 									  "ignore");
 
-			  PyList_Append (list, u_stemmed);
-			  Py_DECREF (u_stemmed);
+			  PyList_SET_ITEM(list, i, u_stemmed); // steals the reference
 			}
 		else
 			{
@@ -141,12 +142,6 @@ static struct PyMethodDef Stemmer_methods[] = {
 };
 
 
-static PyObject *
-Stemmer_getattr (Stemmer * self, char *name)
-{
-  return Py_FindMethod (Stemmer_methods, (PyObject *) self, name);
-}
-
 static char StemmerType__doc__[] = "Stemmer object";
 
 static PyTypeObject StemmerType = {
@@ -157,7 +152,7 @@ static PyTypeObject StemmerType = {
   /* methods */
   (destructor) Stemmer_dealloc,	/*tp_dealloc */
   (printfunc) 0,				/*tp_print */
-  (getattrfunc) Stemmer_getattr,	/*tp_getattr */
+  (getattrfunc) 0,	/*tp_getattr */
   (setattrfunc) 0,				/*tp_setattr */
   (cmpfunc) 0,					/*tp_compare */
   (reprfunc) 0,					/*tp_repr */
@@ -170,7 +165,14 @@ static PyTypeObject StemmerType = {
 
   /* Space for future expansion */
   0L, 0L, 0L, 0L,
-  StemmerType__doc__			/* Documentation string */
+  StemmerType__doc__,			/* Documentation string */
+  /* tp_traverse       */ (traverseproc)0,
+  /* tp_clear          */ (inquiry)0,
+  /* tp_richcompare    */ (richcmpfunc)0,
+  /* tp_weaklistoffset */ (long)0,
+  (getiterfunc)0,		/*tp_iter*/
+  /* tp_iternext       */ (iternextfunc)0,
+  /* tp_methods        */ Stemmer_methods,
 };
 
 
