@@ -1,5 +1,5 @@
 /*
- TextIndexNG V 3                
+ TextIndexNG V 3
  The next generation TextIndex for Zope
 
  This software is governed by a license. See
@@ -83,7 +83,7 @@ static PyObject *normalize(Normalizer *self, PyObject *args)
 
         list = PyList_New(0);
 
-        data = PySequence_Fast(data, "object must be sequence"); 
+        data = PySequence_Fast(data, "object must be sequence");
 
         for (j=0; j<PyList_Size(data); j++) {
             PyObject *word=NULL,*item=NULL;
@@ -208,12 +208,12 @@ static PyTypeObject NormalizerType = {
 static char *Normalizer_args[]={"translation","encoding",NULL};
 
 void CopyTranslationTable(Normalizer *self, PyObject *table) {
-    
+
     int i;
 
     self->table = PyList_New(0);
 
-    table = PySequence_Fast(table, "argument must be sequence"); 
+    table = PySequence_Fast(table, "argument must be sequence");
 
     for (i=0; i<PyObject_Length(table); i++) {
         PyObject *item, *key, *value, *tp;
@@ -223,17 +223,17 @@ void CopyTranslationTable(Normalizer *self, PyObject *table) {
         key   = PyTuple_GetItem(item,0);
         value = PyTuple_GetItem(item,1);
 
-        if (PyString_Check(key))  
+        if (PyString_Check(key))
             key = PyUnicode_FromEncodedObject(key, self->encoding,"strict");
         else Py_XINCREF(key);
 
-        if (PyString_Check(value)) 
+        if (PyString_Check(value))
             value = PyUnicode_FromEncodedObject(value, self->encoding,"strict");
         else Py_XINCREF(value);
 
         tp = Py_BuildValue("(OO)",key,value);
         PyList_Append(self->table, tp);
-    
+
         Py_DECREF(tp);
         Py_DECREF(value);
         Py_DECREF(key);
@@ -269,9 +269,9 @@ newNormalizer(PyObject *modinfo, PyObject *args, PyObject *keywds)
 
 static struct PyMethodDef Normalizer_module_methods[] =
     {
-        { "Normalizer", (PyCFunction) newNormalizer, 
+        { "Normalizer", (PyCFunction) newNormalizer,
           METH_VARARGS|METH_KEYWORDS,
-          "Normalizer(list, [encoding='latin1')" 
+          "Normalizer(list, [encoding='latin1')"
           "-- Normalizer module - takes a list of 2-tuples of strings/unicode strings"
         },
         { NULL, NULL }
@@ -281,6 +281,11 @@ static struct PyMethodDef Normalizer_module_methods[] =
 void
 initnormalizer(void)
 {
+
+  if (PyType_Ready(&NormalizerType) < 0) {
+	  return;
+  }
+
     Py_InitModule3("normalizer", Normalizer_module_methods,
                    "TextIndexNG Normalizer module");
 }

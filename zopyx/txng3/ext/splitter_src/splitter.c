@@ -1,5 +1,5 @@
 /*
- TextIndexNG V 3                
+ TextIndexNG V 3
  The next generation TextIndex for Zope
 
  This software is governed by a license. See
@@ -22,7 +22,7 @@ typedef struct
 {
     PyObject_HEAD
     PyObject *list;                    // list of splitted words
-    hashtable *cache;                 
+    hashtable *cache;
     unsigned char small_cache[256];
     int max_len;                       // maximum length of a word
     int single_chars;                  // allow single character words
@@ -33,14 +33,14 @@ Splitter;
 
 /*
 ** Node handling for hashtable.
-** 
+**
 ** We maintain a hashtable to store (key,value) pairs
-** where the keys are the int value of a character or unicode 
+** where the keys are the int value of a character or unicode
 ** characters. The value is a flag indicating if this character
 ** is an alphanumeric character or a valid word separator.
 ** For characters < 255 we maintain a simple array for performance
-** reasons. 
-** 
+** reasons.
+**
 ** The reason of the hashtable is to cache lookups to Python calls
 ** like Py_Unicode_ISALNUM()/
 */
@@ -63,7 +63,7 @@ typedef struct
 INODE ;
 
 
-// Create a new node 
+// Create a new node
 
 INODE * new_inode(int v)
 {
@@ -74,7 +74,7 @@ INODE * new_inode(int v)
     return n;
 }
 
-// delete a node 
+// delete a node
 
 int del_inode(void * node)
 {
@@ -118,7 +118,7 @@ int inode_get(Splitter * self, int v)
         return MISS;
 }
 
-// insert a new (key,value) pair 
+// insert a new (key,value) pair
 
 int inode_set(Splitter * self, int k, int v)
 {
@@ -130,7 +130,7 @@ int inode_set(Splitter * self, int k, int v)
     return 1;
 }
 
-// calculate the hash value for a node 
+// calculate the hash value for a node
 
 unsigned inode_hash(void *node)
 {
@@ -140,8 +140,8 @@ unsigned inode_hash(void *node)
     return  v % HASHTABLESIZE;
 }
 
-/* 
-** Here starts the splitter dance 
+/*
+** Here starts the splitter dance
 */
 
 static void
@@ -155,7 +155,7 @@ Splitter_dealloc(Splitter *self)
 
 
 /*
-** Dummy functions 
+** Dummy functions
 */
 
 static PyObject *
@@ -207,7 +207,7 @@ Splitter_split(Splitter *self, PyObject *args)
 
     Py_XDECREF(self->list);
     self->list = PyList_New(0);
-    
+
     if (! (PyArg_ParseTuple(args,"O|s",&doc, &encoding))) return NULL;
 
     if (PyString_Check(doc)) {
@@ -222,13 +222,13 @@ Splitter_split(Splitter *self, PyObject *args)
 
             splitUnicodeString(self, doc1);
             Py_XDECREF(doc1);
-        } 
+        }
     } else if (PyUnicode_Check(doc)) {
         PyObject *doc1; // create a *real* copy since we need to modify the string
-        doc1 = PyUnicode_FromUnicode(NULL, ((PyUnicodeObject*) doc)->length);
-        Py_UNICODE_COPY(((PyUnicodeObject *) doc1)->str,
-                        ((PyUnicodeObject *) doc)->str,
-                        ((PyUnicodeObject*) doc)->length);
+        doc1 = PyUnicode_FromUnicode(NULL, PyUnicode_GET_SIZE(doc));
+        Py_UNICODE_COPY(PyUnicode_AS_UNICODE(doc1),
+                        PyUnicode_AS_UNICODE(doc),
+                        PyUnicode_GET_SIZE(doc));
         splitUnicodeString(self, doc1);
         Py_DECREF(doc1);
     } else {
@@ -242,7 +242,7 @@ Splitter_split(Splitter *self, PyObject *args)
 }
 
 
-/* 
+/*
 ** return a sequence of word positions of a word inside the splitted text
 */
 
@@ -330,13 +330,6 @@ static PyTypeObject SplitterType = {
                                        (setattrfunc)0,                    /*tp_setattr*/
                                        (cmpfunc)0,                        /*tp_compare*/
                                        (reprfunc)0,                       /*tp_repr*/
-                                       0,                                 /*tp_as_number*/
-                                       &Splitter_as_sequence,         /*tp_as_sequence*/
-                                       0,                                 /*tp_as_mapping*/
-                                       (hashfunc)0,                       /*tp_hash*/
-                                       (ternaryfunc)0,                    /*tp_call*/
-                                       (reprfunc)0,                       /*tp_str*/
-
                                        /* Space for future expansion */
                                        0L,0L,0L,0L,
                                        SplitterType__doc__ /* Documentation string */
@@ -346,14 +339,14 @@ static PyTypeObject SplitterType = {
 ** split a non-unicode string
 */
 
-int splitString(Splitter *self,PyObject *doc) 
+int splitString(Splitter *self,PyObject *doc)
 {
     PyObject *word ;
     char *s,*str;
     int i, inside_word=0, start=0, len;
     register int value, next_value;
 
-    PyString_AsStringAndSize(doc, &str, &len);  
+    PyString_AsStringAndSize(doc, &str, &len);
     s = str;
 
     for (i=0; i<len; i++,s++) {
@@ -378,7 +371,7 @@ int splitString(Splitter *self,PyObject *doc)
                 inside_word = 1;
             }
         } else {
-            
+
             if (value == IS_SEPARATOR) {
                 char next_c = *(s+1);
 
@@ -390,8 +383,8 @@ int splitString(Splitter *self,PyObject *doc)
                     next_value = isalnum(next_c) ? IS_ALNUM : IS_TRASH;
                     inode_set(self, next_c, next_value);
                 }
-                
-                if (next_value == IS_TRASH) { 
+
+                if (next_value == IS_TRASH) {
                     if (! (i-start<2 && ! self->single_chars)) {
                         word = Py_BuildValue("s#", s-(i-start), min(i-start, self->max_len));
                         PyList_Append(self->list, word);
@@ -400,7 +393,7 @@ int splitString(Splitter *self,PyObject *doc)
                     start = i;
                     inside_word = 0;
                 }
-                
+
             }
             else if (value == IS_TRASH) {
                 if (! (i-start<2 && ! self->single_chars)) {
@@ -436,8 +429,8 @@ int splitUnicodeString(Splitter *self,PyObject *doc)
     int i, inside_word=0, start=0, len;
     register int value, next_value;
 
-    s = ((PyUnicodeObject *) doc)->str;       // start of unicode string
-    len = ((PyUnicodeObject *)doc)->length;
+    s = PyUnicode_AS_UNICODE(doc);       // start of unicode string
+    len = PyUnicode_GET_SIZE(doc);
 
 
     for (i=0; i<len; i++,s++) {
@@ -475,8 +468,8 @@ int splitUnicodeString(Splitter *self,PyObject *doc)
                     next_value = Py_UNICODE_ISALNUM(next_c) ? IS_ALNUM : IS_TRASH;
                     inode_set(self, next_c, next_value);
                 }
-                
-                if (next_value == IS_TRASH) { 
+
+                if (next_value == IS_TRASH) {
                     if (! (i-start<2 && ! self->single_chars)) {
                         word = Py_BuildValue("u#", s-(i-start), min(i-start, self->max_len));
                         PyList_Append(self->list, word);
@@ -485,7 +478,7 @@ int splitUnicodeString(Splitter *self,PyObject *doc)
                     start = i;
                     inside_word = 0;
                 }
-                
+
             }
 
             else if (value==IS_TRASH) {
@@ -512,12 +505,11 @@ int splitUnicodeString(Splitter *self,PyObject *doc)
 }
 
 
-/* 
+/*
 ** constructor stuff
 */
 
 static char *splitter_args[] = {"separator","singlechar","maxlen","casefolding",NULL};
-
 
 static PyObject *
 newSplitter(PyObject *modinfo, PyObject *args,PyObject *keywds)
@@ -570,9 +562,8 @@ newSplitter(PyObject *modinfo, PyObject *args,PyObject *keywds)
         self->small_cache[i] = UNSET ;
 
     // assign separator characters to small cache
-    for (i=0; i<strlen(separator); i++)  
+    for (i=0; i<strlen(separator); i++)
         self->small_cache[(int) separator[i]] =  IS_SEPARATOR;
-
 
     return (PyObject*) self;
 }
@@ -594,6 +585,11 @@ static char Splitter_module_documentation[] =
 void
 initsplitter(void)
 {
+    /* ready types */
+    if (PyType_Ready(&SplitterType) < 0) {
+        return;
+    }
+
     Py_InitModule3("splitter", Splitter_module_methods,
                        Splitter_module_documentation);
 }

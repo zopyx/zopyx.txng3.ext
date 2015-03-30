@@ -1,7 +1,7 @@
 # -*- coding: iso-8859-1
 
 ###########################################################################
-# TextIndexNG V 3                
+# TextIndexNG V 3
 # The next generation TextIndex for Zope
 #
 # This software is governed by a license. See
@@ -23,7 +23,6 @@ class SplitterTests(unittest.TestCase):
         self.assertEqual(got, expected)
 
     def testSimple(self):
-
         SP = Splitter()
         self._test(SP, '',  [])
         self._test(SP, 'foo',  ['foo'])
@@ -32,6 +31,7 @@ class SplitterTests(unittest.TestCase):
         self._test(SP, ' foo bar', ['foo','bar'])
         self._test(SP, ' foo bar ', ['foo','bar'])
         self._test(SP, ' foo 23 25 bar ', ['foo','23','25','bar'])
+
 
     def testDisabledCaseFolding(self):
 
@@ -56,7 +56,7 @@ class SplitterTests(unittest.TestCase):
         self._test(SP, ' foo Bar ', ['foo','bar'])
 
     def testMaxlen(self):
-        
+
         SP = Splitter(maxlen=5)
         self._test(SP, 'abcdefg foo barfoo', ['abcde','foo','barfo'])
         self._test(SP, 'abcdefg'*2000, ['abcde'])
@@ -98,7 +98,7 @@ class SplitterTests(unittest.TestCase):
 
     def testParagraphs(self):
         SP = Splitter(singlechar=1, separator='§')
-        
+
         self._test(SP, 'dies ist §8 b b§b',
                        ['dies', 'ist', '§8', 'b', 'b§b'])
 
@@ -129,10 +129,9 @@ def debug():
 def pdebug():
     import pdb
     pdb.run('debug()')
-   
+
 if __name__=='__main__':
    if len(sys.argv) > 1:
       globals()[sys.argv[1]]()
    else:
       main()
-

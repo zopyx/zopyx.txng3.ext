@@ -1,5 +1,5 @@
 /*
- TextIndexNG V 3                
+ TextIndexNG V 3
  The next generation TextIndex for Zope
 
  This software is governed by a license. See
@@ -45,8 +45,8 @@ static PyObject *Stemmer_availableStemmers(Stemmer *self,PyObject*args)
           PyList_Append(list, lang);
           Py_DECREF(lang);
           i++;
-      }           
-      else 
+      }
+      else
         break;
     }
     PyList_Sort(list);
@@ -217,6 +217,10 @@ initstemmer (void)
 {
   PyObject *m;
   char rev[] = "$Revision: 2373 $";
+
+  if (PyType_Ready(&StemmerType) < 0) {
+	  return;
+  }
 
   /* Create the module and add the functions */
   m = Py_InitModule3 ("stemmer", stemmer_module_methods,
