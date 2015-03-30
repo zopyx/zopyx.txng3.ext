@@ -330,6 +330,12 @@ static PyTypeObject SplitterType = {
                                        (setattrfunc)0,                    /*tp_setattr*/
                                        (cmpfunc)0,                        /*tp_compare*/
                                        (reprfunc)0,                       /*tp_repr*/
+                                       0,                                 /*tp_as_number*/
+                                       &Splitter_as_sequence,         /*tp_as_sequence*/
+                                       0,                                 /*tp_as_mapping*/
+                                       (hashfunc)0,                       /*tp_hash*/
+                                       (ternaryfunc)0,                    /*tp_call*/
+                                       (reprfunc)0,                       /*tp_str*/
                                        /* Space for future expansion */
                                        0L,0L,0L,0L,
                                        SplitterType__doc__ /* Documentation string */
