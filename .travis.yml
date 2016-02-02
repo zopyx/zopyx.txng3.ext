@@ -10,7 +10,7 @@ install:
   - bin/buildout
 
 script:
-  - bin/test-jenkins --xml
+  - bin/test 
 
 
 notifications:
