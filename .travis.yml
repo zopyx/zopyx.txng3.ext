@@ -1,14 +1,17 @@
 language:  python
+sudo: false
 
 python:
-  - "2.7"
+  - 2.6
+  - 2.7
+  - pypy
 
-before_script:
-  - sudo apt-get install -qq pdftk
-  - sudo apt-get install -qq poppler-utils
+install:
+  - python bootstrap.py
+  - bin/buildout
 
-script: 
-  - bash build_test.sh python-$TRAVIS_PYTHON_VERSION
+script:
+  - bin/test-jenkins --xml
 
 
 notifications:
