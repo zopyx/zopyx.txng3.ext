@@ -10,7 +10,7 @@ then
 fi
 
 virtualenv-$python_version .
-bin/python bootstrap.py
+bin/pip install zc.buildout
+bin/zc.buildout bootstrap
 bin/buildout
-bin/test-jenkins --xml
-
+bin/test
