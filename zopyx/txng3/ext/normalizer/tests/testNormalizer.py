@@ -60,14 +60,6 @@ class TestNormalizer(unittest.TestCase):
                'auf einen alle Flugplätze der Taliban zerstört worden'
         self._doTest(text, table)
 
-    def test5(self):
-
-        table = [ (u'Ä',u'Ae'), (u'Ö',u'Oe') ]
-        text = unicode('Bei den dreitägigen Angriffen seien auch bis'\
-               'auf einen alle Flugplätze der Taliban zerstört worden','latin1')
-        self._doTest(text, table)
-
-
 def test_suite():
     s = unittest.TestSuite()
     s.addTest(unittest.makeSuite(TestNormalizer))
