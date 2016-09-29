@@ -14,12 +14,9 @@ from zopyx.txng3.ext.splitter import Splitter
 
 class SplitterTests(unittest.TestCase):
 
-    encoding = 'iso-8859-15'
-
     def _test(self, SP, text, expected):
-
-        got = SP.split(text, self.encoding)
-        expected = [ unicode(x, self.encoding) for x in expected ]
+        print(text, expected)
+        got = SP.split(text)
         self.assertEqual(got, expected)
 
     def testSimple(self):
@@ -135,6 +132,3 @@ if __name__=='__main__':
       globals()[sys.argv[1]]()
    else:
       main()
-0Looking
-
-
