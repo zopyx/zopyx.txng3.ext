@@ -4,14 +4,13 @@ import re
 
 class Splitter(object):
 
-    def __init__(self, casefolding=True, maxlen=None, singlechar=True, separator=u'.'):
+    def __init__(self, casefolding=True, maxlen=None, singlechar=True, separator=u' '):
         self.casefolding = casefolding
         self.maxlen = maxlen
         self.singlechar = singlechar
         self.separator = separator
 
     def split(self, text):
-
         if self.casefolding:
             text = text.lower()
 
@@ -24,5 +23,5 @@ class Splitter(object):
         if not self.singlechar:
             text = [t for t in text if len(text) > 1]
     
-        text = [t for t in text if t]
+        text = [t.strip() for t in text if t]
         return text
