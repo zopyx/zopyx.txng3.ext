@@ -8,7 +8,7 @@
 
 class Normalizer(object):
 
-    def __init__(self, translation_table= ()):
+    def __init__(self, translation_table=()):
         self._translation_table = translation_table
 
     def getTable(self):
@@ -19,4 +19,3 @@ class Normalizer(object):
         for old, new in self._translation_table:
             text = text.replace(old, new)
         return text
-

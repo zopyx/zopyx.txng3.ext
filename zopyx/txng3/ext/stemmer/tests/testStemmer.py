@@ -6,11 +6,15 @@
 ################################################################
 
 
-import sys, os, unittest, gzip
+import sys
+import os
+import unittest
+import gzip
 from Stemmer import Stemmer
 
 
 __basedir__ = os.path.dirname(__file__)
+
 
 class SimpleStemmerTests(unittest.TestCase):
 
@@ -56,8 +60,9 @@ class SimpleStemmerTests(unittest.TestCase):
 
         S = Stemmer(language)
         voc, out = self.getData(language)
-        for v,r  in zip(voc,out):
-            self.assertEqual(S.stemWords([v]), [r], 'term: %s\ngot: %s\nexpected: %s' % (repr(v), repr(S.stemWords([v])), repr(r)))
+        for v, r in zip(voc, out):
+            self.assertEqual(S.stemWords([v]), [r], 'term: %s\ngot: %s\nexpected: %s' % (
+                repr(v), repr(S.stemWords([v])), repr(r)))
         self.assertEqual(S.stemWords(voc), out)
 
     def testGerman(self):
@@ -103,7 +108,7 @@ class SimpleStemmerTests(unittest.TestCase):
         self.doTest('finnish')
 
     def testTurkish(self):
-        self.doTest('turkish') 
+        self.doTest('turkish')
 
     def testHungarian(self):
         self.doTest('hungarian')
@@ -111,24 +116,27 @@ class SimpleStemmerTests(unittest.TestCase):
     def testRomanian(self):
         self.doTest('romanian')
 
+
 def test_suite():
     s = unittest.TestSuite()
     s.addTest(unittest.makeSuite(SimpleStemmerTests))
     return s
 
+
 def main():
-   unittest.TextTestRunner().run(test_suite())
+    unittest.TextTestRunner().run(test_suite())
+
 
 def debug():
-   test_suite().debug()
+    test_suite().debug()
+
 
 def pdebug():
     import pdb
     pdb.run('debug()')
-   
-if __name__=='__main__':
-   if len(sys.argv) > 1:
-      globals()[sys.argv[1]]()
-   else:
-      main()
 
+if __name__ == '__main__':
+    if len(sys.argv) > 1:
+        globals()[sys.argv[1]]()
+    else:
+        main()
