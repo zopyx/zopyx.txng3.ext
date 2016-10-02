@@ -4,7 +4,7 @@ zopyx.txng3.ext - Extension modules for TextIndexNG3
 Author
 ------
 
-zopyx.txng3.ext is written by Andreas Jung for ZOPYX Ltd. & Co. KG, Tuebingen, Germany.
+zopyx.txng3.ext is written by Andreas Jung for ZOPYX, Tuebingen, Germany.
 
 License
 --------
@@ -18,21 +18,6 @@ License
 
 -  TextIndexNG3 ships with the python-levenshtein extension written by
    David Necas und published under the GNU Public License (GPL).
-
-Building
---------
-
-Building the egg on Windows (basically a reminder for myself):
-
-Basically a reminder for myself:
-
-- Install Cygwin
-
-- Install the Windows Python 2.4
-
-- under Cygwin::
-
-      python.exe setup.py build -c mingw32 bdist_egg upload
 
 
 Contact
