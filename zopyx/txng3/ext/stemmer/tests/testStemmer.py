@@ -29,7 +29,6 @@ class SimpleStemmerTests(unittest.TestCase):
                 elif filename.endswith('.txt'):
                     with open(filename) as fp:
                         content = fp.read()
-                        content = str(content, 'utf-8')
                     break
         if not content:
             raise IOError('No input file found for {}'.format(lang))
@@ -46,7 +45,6 @@ class SimpleStemmerTests(unittest.TestCase):
                 elif filename.endswith('.txt'):
                     with open(filename) as fp:
                         content = fp.read()
-                        content = str(content, 'utf-8')
                     break
         if not content:
             raise IOError('No input file found for {}'.format(lang))
@@ -54,68 +52,66 @@ class SimpleStemmerTests(unittest.TestCase):
         assert len(voc) == len(out)
         return voc, out
 
-    def doTest(self, language, encoding):
+    def doTest(self, language):
         """ simple stemming"""
 
         S = Stemmer(language)
         voc, out = self.getData(language)
-
         for v,r  in zip(voc,out):
             self.assertEqual(S.stemWords([v]), [r], 'term: %s\ngot: %s\nexpected: %s' % (repr(v), repr(S.stemWords([v])), repr(r)))
-
         self.assertEqual(S.stemWords(voc), out)
 
     def testGerman(self):
-        self.doTest('german', 'utf-8')
+        self.doTest('german')
 
     def testFrench(self):
-        self.doTest('french', 'utf-8')
+        self.doTest('french')
 
     def testDanish(self):
-        self.doTest('danish', 'utf-8')
+        self.doTest('danish')
 
     def testDutch(self):
-        self.doTest('dutch', 'utf-8')
+        self.doTest('dutch')
 
     def testEnglish(self):
-        self.doTest('english', 'utf-8')
+        self.doTest('english')
 
     def testDanish(self):
-        self.doTest('danish', 'utf-8')
+        self.doTest('danish')
 
     def testItalian(self):
-        self.doTest('italian', 'utf-8')
+        self.doTest('italian')
 
     def testNorwegian(self):
-        self.doTest('norwegian', 'utf-8')
+        self.doTest('norwegian')
 
     def testPortuguese(self):
-        self.doTest('portuguese', 'utf-8')
+        self.doTest('portuguese')
 
     def testSpanish(self):
-        self.doTest('spanish', 'utf-8')
+        self.doTest('spanish')
 
     def testSwedisch(self):
-        self.doTest('swedish', 'utf-8')
+        self.doTest('swedish')
 
     def testRussian(self):
-        self.doTest('russian', 'utf-8')
+        self.doTest('russian')
 
     def testPorter(self):
-        self.doTest('porter', 'utf-8')
+        self.doTest('porter')
 
     def testFinnish(self):
-        self.doTest('finnish', 'utf-8')
-#
-#    def testTurkish(self):
-#        self.doTest('turkish', 'utf-8')
-#
-#    def testHungarian(self):
-#        self.doTest('hungarian', 'utf-8')
-#
-##    def testRomanian(self):
-#        self.doTest('romanian', 'utf-8')
-#
+        self.doTest('finnish')
+
+    def testTurkish(self):
+        self.doTest('turkish') 
+
+    def testHungarian(self):
+        self.doTest('hungarian')
+
+    def testRomanian(self):
+        self.doTest('romanian')
+
 def test_suite():
     s = unittest.TestSuite()
     s.addTest(unittest.makeSuite(SimpleStemmerTests))
