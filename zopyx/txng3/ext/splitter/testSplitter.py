@@ -1,12 +1,9 @@
-# -*- coding: iso-8859-1
+# -*- coding: utf-8 -*-
 
-###########################################################################
-# TextIndexNG V 3
-# The next generation TextIndex for Zope
-#
-# This software is governed by a license. See
-# LICENSE.txt for the terms of this license.
-###########################################################################
+################################################################
+# zopyx.txng3.ext
+# (C) 2005-2016, Andreas Jung, ZOPYX, www.zopyx.com
+################################################################
 
 
 import unittest, sys

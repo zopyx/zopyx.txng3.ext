@@ -1,12 +1,10 @@
-#-*- coding: iso-8859-15 -*-
+# -*- coding: utf-8 -*-
 
-###########################################################################
-# TextIndexNG V 3                
-# The next generation TextIndex for Zope
-#
-# This software is governed by a license. See
-# LICENSE.txt for the terms of this license.
-###########################################################################
+################################################################
+# zopyx.txng3.ext
+# (C) 2005-2016, Andreas Jung, ZOPYX, www.zopyx.com
+################################################################
+
 
 import sys, os, unittest
 from zopyx.txng3.ext.normalizer import Normalizer
@@ -55,9 +53,9 @@ class TestNormalizer(unittest.TestCase):
 
     def test4(self):
 
-        table = [ ('ä','ae'), ('ö','oe') ]
-        text = 'Bei den dreitägigen Angriffen seien auch bis'\
-               'auf einen alle Flugplätze der Taliban zerstört worden'
+        table = [ ('Ã¤','ae'), ('Ã¶','oe') ]
+        text = 'Bei den dreitÃ¤gigen Angriffen seien auch bis'\
+               'auf einen alle FlugplÃ¤tze der Taliban zerstÃ¶rt worden'
         self._doTest(text, table)
 
 def test_suite():
