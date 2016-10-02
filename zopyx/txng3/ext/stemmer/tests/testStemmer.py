@@ -17,19 +17,42 @@ class SimpleStemmerTests(unittest.TestCase):
 
     def getData(self, lang):
 
-        with gzip.open(os.path.join(__basedir__, lang, 'voc.txt.gz')) as fp:
-            content = fp.read()
-        content = str(content, 'utf-8')
+        content = None
+        for fn in ('voc.txt', 'voc.txt.gz'):
+            filename = os.path.join(__basedir__, lang, fn)
+            if os.path.exists(filename):
+                if filename.endswith('.gz'):
+                    with gzip.open(filename) as fp:
+                        content = fp.read()
+                        content = str(content, 'utf-8')
+                    break
+                elif filename.endswith('.txt'):
+                    with open(filename) as fp:
+                        content = fp.read()
+                        content = str(content, 'utf-8')
+                    break
+        if not content:
+            raise IOError('No input file found for {}'.format(lang))
         voc = [line.strip() for line in content.split('\n')]
 
-        with gzip.open(os.path.join(__basedir__, lang, 'output.txt.gz')) as fp:
-            content = fp.read()
-        content = str(content, 'utf-8')
+        for fn in ('output.txt', 'output.txt.gz'):
+            filename = os.path.join(__basedir__, lang, fn)
+            if os.path.exists(filename):
+                if filename.endswith('.gz'):
+                    with gzip.open(filename) as fp:
+                        content = fp.read()
+                        content = str(content, 'utf-8')
+                    break
+                elif filename.endswith('.txt'):
+                    with open(filename) as fp:
+                        content = fp.read()
+                        content = str(content, 'utf-8')
+                    break
+        if not content:
+            raise IOError('No input file found for {}'.format(lang))
         out = [line.strip() for line in content.split('\n')]
-
         assert len(voc) == len(out)
         return voc, out
-
 
     def doTest(self, language, encoding):
         """ simple stemming"""
