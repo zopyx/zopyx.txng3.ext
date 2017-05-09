@@ -9,6 +9,13 @@
 #include "Python.h"
 #include <ctype.h>
 #include "dict.h"
+#if PY_MAJOR_VERSION >= 3
+
+#define PY3K
+#define INT_FROM_LONG(x) PyLong_FromLong(x)
+#else
+#define INT_FROM_LONG(x) PyInt_FromLong(x)
+#endif
 
 #ifndef min
 #define min(a,b) ((a)<(b)?(a):(b))
@@ -166,25 +173,19 @@ Splitter_concat(Splitter *self, PyObject *other)
 }
 
 static PyObject *
-Splitter_repeat(Splitter *self, long n)
+Splitter_repeat(Splitter *self, Py_ssize_t n)
 {
     PyErr_SetString(PyExc_TypeError, "Cannot repeat Splitters.");
     return NULL;
 }
 
-static PyObject *
-Splitter_slice(Splitter *self, int i, int j)
-{
-    PyErr_SetString(PyExc_TypeError, "Cannot slice Splitters.");
-    return NULL;
-}
 
 /*
 ** __getitem__() support (not used)
 */
 
 static PyObject *
-Splitter_item(Splitter *self, int i)
+Splitter_item(Splitter *self, Py_ssize_t i)
 {
     PyObject *item;
     item = PyList_GetItem(self->list, i);
@@ -210,7 +211,7 @@ Splitter_split(Splitter *self, PyObject *args)
 
     if (! (PyArg_ParseTuple(args,"O|s",&doc, &encoding))) return NULL;
 
-    if (PyString_Check(doc)) {
+    if (PyBytes_Check(doc)) {
         if (strlen(encoding) == 0 || !strcmp(encoding,"ascii"))
             splitString(self, doc);
         else {
@@ -262,7 +263,7 @@ Splitter_indexes(Splitter *self, PyObject *args)
         item=PyList_GET_ITEM(self->list,i);
 
         if (PyUnicode_Compare(word,item)==0) {
-            index=PyInt_FromLong(i);
+            index=INT_FROM_LONG(i);
             if(!index)
                 return NULL;
             PyList_Append(r,index);
@@ -287,13 +288,10 @@ Splitter_length(Splitter *self)
 */
 
 static PySequenceMethods Splitter_as_sequence = {
-            (inquiry)Splitter_length,        /*sq_length*/
+            (lenfunc)Splitter_length,        /*sq_length*/
             (binaryfunc)Splitter_concat,     /*sq_concat*/
-            (intargfunc)Splitter_repeat,     /*sq_repeat*/
-            (intargfunc)Splitter_item,       /*sq_item*/
-            (intintargfunc)Splitter_slice,   /*sq_slice*/
-            (intobjargproc)0,                    /*sq_ass_item*/
-            (intintobjargproc)0,                 /*sq_ass_slice*/
+            (ssizeargfunc)Splitter_repeat,     /*sq_repeat*/
+            (ssizeargfunc)Splitter_item,       /*sq_item*/
         };
 
 
@@ -305,30 +303,30 @@ static struct PyMethodDef Splitter_methods[] =
         { "indexes", (PyCFunction)Splitter_indexes, METH_VARARGS,
           "indexes(word) -- Return a list of the indexes of word in the sequence",
         },
-        { NULL, NULL }		/* sentinel */
+        { NULL, NULL }      /* sentinel */
     };
 
 
-static PyObject *
-Splitter_getattr(Splitter *self, char *name)
-{
-    return Py_FindMethod(Splitter_methods, (PyObject *)self, name);
-}
 
 static char SplitterType__doc__[] = "splitter instance for strings or unicode strings";
 
 static PyTypeObject SplitterType = {
+#ifndef PY3K
                                        PyObject_HEAD_INIT(NULL)
                                        0,                                 /*ob_size*/
                                        "Splitter",                    /*tp_name*/
+#else
+                                       PyObject_HEAD_INIT(NULL)
+                                       "Splitter",                    /*tp_name*/
+#endif
                                        sizeof(Splitter),              /*tp_basicsize*/
                                        0,                                 /*tp_itemsize*/
                                        /* methods */
                                        (destructor)Splitter_dealloc,  /*tp_dealloc*/
                                        (printfunc)0,                      /*tp_print*/
-                                       (getattrfunc)Splitter_getattr, /*tp_getattr*/
+                                       (getattrfunc)0, /*tp_getattr*/
                                        (setattrfunc)0,                    /*tp_setattr*/
-                                       (cmpfunc)0,                        /*tp_compare*/
+                                       0,                                /*tp_compare*/
                                        (reprfunc)0,                       /*tp_repr*/
                                        0,                                 /*tp_as_number*/
                                        &Splitter_as_sequence,         /*tp_as_sequence*/
@@ -338,7 +336,14 @@ static PyTypeObject SplitterType = {
                                        (reprfunc)0,                       /*tp_str*/
                                        /* Space for future expansion */
                                        0L,0L,0L,0L,
-                                       SplitterType__doc__ /* Documentation string */
+                                       SplitterType__doc__, /* Documentation string */
+                                       /* tp_tr averse       */ 0,
+                                       /* tp_c  lear          */ (inquiry)0,
+                                       /* tp_r  ichcompare    */ (richcmpfunc)0,
+                                       /* tp_w  eaklistoffset */ (long)0,
+                                       (getiterfunc)0,      /*tp_iter*/
+                                       /* tp_iternext       */ (iternextfunc)0,
+                                       /* tp_methods        */ Splitter_methods,
                                    };
 
 /*
@@ -349,10 +354,11 @@ int splitString(Splitter *self,PyObject *doc)
 {
     PyObject *word ;
     char *s,*str;
-    int i, inside_word=0, start=0, len;
+    int i, inside_word=0, start=0;
+    Py_ssize_t len;
     register int value, next_value;
 
-    PyString_AsStringAndSize(doc, &str, &len);
+    PyBytes_AsStringAndSize(doc, &str, &len);
     s = str;
 
     for (i=0; i<len; i++,s++) {
@@ -588,14 +594,49 @@ static char Splitter_module_documentation[] =
     ;
 
 
-void
-initsplitter(void)
+
+#ifdef PY3K
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "splitter",                     /* m_name */
+        Splitter_module_documentation,  /* m_doc */
+        -1,                             /* m_size */
+        Splitter_module_methods,        /* m_methods */
+        NULL,                           /* m_reload */
+        NULL,                           /* m_traverse */
+        NULL,                           /* m_clear */
+        NULL,                           /* m_free */
+    };
+#endif
+
+static PyObject*
+module_init(void)
 {
+    PyObject *m;
     /* ready types */
     if (PyType_Ready(&SplitterType) < 0) {
-        return;
+        return NULL;
     }
+    /* Create the module and add the functions */
+#ifdef PY3K
+    m = PyModule_Create(&moduledef);
+#else
+    m = Py_InitModule3("splitter", Splitter_module_methods,
+                        Splitter_module_documentation);
+#endif
 
-    Py_InitModule3("splitter", Splitter_module_methods,
-                       Splitter_module_documentation);
+    return m;
 }
+
+
+#ifdef PY3K
+PyMODINIT_FUNC PyInit_splitter(void)
+{
+    return module_init();
+}
+#else
+PyMODINIT_FUNC initsplitter(void)
+{
+    module_init();
+}
+#endif

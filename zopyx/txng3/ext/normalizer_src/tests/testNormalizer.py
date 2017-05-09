@@ -1,7 +1,7 @@
 #-*- coding: iso-8859-15 -*-
 
 ###########################################################################
-# TextIndexNG V 3                
+# TextIndexNG V 3
 # The next generation TextIndex for Zope
 #
 # This software is governed by a license. See
@@ -28,7 +28,7 @@ class TestNormalizer(unittest.TestCase):
         self.assertEqual(got, expected)
 
     def testSimple(self):
-        
+
         N = Normalizer( [] )
         self.assertEqual(N.getTable(), [] )
 
@@ -46,7 +46,7 @@ class TestNormalizer(unittest.TestCase):
         table = [ ('a','bb'), ('bb','cc') ]
         text = 'the quick brown fox jumps over the lazy dog'
         self._doTest(text, table)
-            
+
     def test3(self):
 
         table = [ ('foo','bar') ]
@@ -63,8 +63,8 @@ class TestNormalizer(unittest.TestCase):
     def test5(self):
 
         table = [ (u'Ä',u'Ae'), (u'Ö',u'Oe') ]
-        text = unicode('Bei den dreitägigen Angriffen seien auch bis'\
-               'auf einen alle Flugplätze der Taliban zerstört worden','latin1')
+        text = (u'Bei den dreitägigen Angriffen seien auch bis'
+                u'auf einen alle Flugplätze der Taliban zerstört worden')
         self._doTest(text, table)
 
 
@@ -82,10 +82,9 @@ def debug():
 def pdebug():
     import pdb
     pdb.run('debug()')
-   
+
 if __name__=='__main__':
    if len(sys.argv) > 1:
       globals()[sys.argv[1]]()
    else:
       main()
-

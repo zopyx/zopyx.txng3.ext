@@ -1,3 +1,7 @@
+4.0.0 (unreleased)
+------------------
+- Added support for Python 3.4, 3.5 and 3.6.
+
 3.4.0 (2016/02/02)
 ------------------
 - added support for PyPy
@@ -6,7 +10,7 @@
 3.3.7 (2014/09/05)
 ------------------
 
-- Fix missing namespace declaration on ``ext``level in ``__init__.py`` and 
+- Fix missing namespace declaration on ``ext``level in ``__init__.py`` and
   avoid recent setuptools to spit and fail.
 
 3.3.5 (2014/07/13)
@@ -20,7 +24,7 @@
 
 3.3.3 (2012/05/16)
 ------------------
-- applied patch for 
+- applied patch for
   https://sourceforge.net/tracker/?func=detail&atid=458418&aid=3527329&group_id=50052
 
 3.3.2 (2010/03/10)
@@ -34,4 +38,3 @@
 3.3.0 (2009/03/15)
 ------------------
 - refactored and re-released as zopyx.txng3.ext
-

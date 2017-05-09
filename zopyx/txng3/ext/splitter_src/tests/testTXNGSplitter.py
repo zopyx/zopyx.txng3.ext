@@ -12,6 +12,14 @@
 import unittest, sys
 from zopyx.txng3.ext.splitter import Splitter
 
+try:
+    unicode
+except NameError:
+    def unicode(x, enc):
+        if isinstance(x, str):
+            return x
+        return x.decode(enc)
+
 class SplitterTests(unittest.TestCase):
 
     encoding = 'iso-8859-15'
@@ -19,7 +27,8 @@ class SplitterTests(unittest.TestCase):
     def _test(self, SP, text, expected):
 
         got = SP.split(text, self.encoding)
-        expected = [ unicode(x, self.encoding) for x in expected ]
+        expected = [ unicode(x, self.encoding) if isinstance(x, bytes) else x
+                     for x in expected ]
         self.assertEqual(got, expected)
 
     def testSimple(self):
@@ -100,13 +109,14 @@ class SplitterTests(unittest.TestCase):
         SP = Splitter(singlechar=1, separator='§')
 
         self._test(SP, 'dies ist §8 b b§b',
-                       ['dies', 'ist', '§8', 'b', 'b§b'])
+                       [u'dies', u'ist', u'§8', u'b', u'b§b'])
 
     def testSingleCharCachePoisoning(self):
         SP = Splitter()
 
         SP.split(u'D')
-        self.assertEqual(u'D', unicode('D'))
+        if str is bytes:
+            self.assertEqual(u'D', unicode('D'))
 
     def testSingleCharComparisonPoisoning(self):
         SP = Splitter()

@@ -1,5 +1,5 @@
 ###########################################################################
-# TextIndexNG V 3                
+# TextIndexNG V 3
 # The next generation TextIndex for Zope
 #
 # This software is governed by a license. See
@@ -13,6 +13,12 @@ from zopyx.txng3.ext.stemmer import Stemmer
 
 __basedir__ = os.path.dirname(__file__)
 
+try:
+    unicode
+except NameError:
+    def unicode(x, enc):
+        return x.decode(enc)
+
 class SimpleStemmerTests(unittest.TestCase):
 
     def getData(self, lang):
@@ -20,8 +26,8 @@ class SimpleStemmerTests(unittest.TestCase):
         voc = gzip.open(os.path.join(__basedir__, lang, 'voc.txt.gz')).read()
         out = gzip.open(os.path.join(__basedir__, lang, 'output.txt.gz')).read()
 
-        voc = [ x.strip() for x in voc.split('\n') ]
-        out = [ x.strip() for x in out.split('\n') ]
+        voc = [ x.strip() for x in voc.split(b'\n') ]
+        out = [ x.strip() for x in out.split(b'\n') ]
 
         assert len(voc) == len(out)
         return voc, out
@@ -117,10 +123,9 @@ def debug():
 def pdebug():
     import pdb
     pdb.run('debug()')
-   
+
 if __name__=='__main__':
    if len(sys.argv) > 1:
       globals()[sys.argv[1]]()
    else:
       main()
-

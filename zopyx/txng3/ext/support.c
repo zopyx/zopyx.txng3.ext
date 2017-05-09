@@ -1,5 +1,5 @@
 /*
- TextIndexNG V 3                
+ TextIndexNG V 3
  The next generation TextIndex for Zope
 
  This software is governed by a license. See
@@ -8,7 +8,9 @@
 
 #include "Python.h"
 #include <stdlib.h>
-
+#if PY_MAJOR_VERSION >= 3
+#define PY3K
+#endif
 
 static PyObject *
 stopwordfilter(PyObject *modinfo, PyObject *args)
@@ -45,22 +47,44 @@ static struct PyMethodDef support_module_methods[] =
         { NULL, NULL }
     };
 
+#ifdef PY3K
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "support",                      /* m_name */
+        "TexnIndexNG support module",   /* m_doc */
+        -1,                             /* m_size */
+        support_module_methods,         /* m_methods */
+        NULL,                           /* m_reload */
+        NULL,                           /* m_traverse */
+        NULL,                           /* m_clear */
+        NULL,                           /* m_free */
+    };
+#endif
 
-void
-initsupport(void)
+static PyObject*
+module_init(void)
 {
-    PyObject *m, *d;
-    char *rev="$Revision: 2068 $";
+    PyObject *m;
 
     /* Create the module and add the functions */
+#ifdef PY3K
+    m = PyModule_Create(&moduledef);
+#else
     m = Py_InitModule3("support", support_module_methods,
-                        "TextIndexNG support module"); 
-
-    /* Add some symbolic constants to the module */
-    d = PyModule_GetDict(m);
-    PyDict_SetItemString(d, "__version__",
-                         PyString_FromStringAndSize(rev+11,strlen(rev+11)-2));
-    if (PyErr_Occurred())
-        Py_FatalError("can't initialize module support");
+                        "TextIndexNG support module");
+#endif
+    return m;
 }
 
+
+#ifdef PY3K
+PyMODINIT_FUNC PyInit_support(void)
+{
+    return module_init();
+}
+#else
+PyMODINIT_FUNC initsupport(void)
+{
+    module_init();
+}
+#endif

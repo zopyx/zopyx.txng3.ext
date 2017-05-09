@@ -7,6 +7,9 @@
 */
 
 #include "Python.h"
+#if PY_MAJOR_VERSION >= 3
+#define PY3K
+#endif
 
 typedef struct
 {
@@ -42,7 +45,7 @@ static PyObject *NormalizeWord(Normalizer *self,PyObject *word)
     int i;
     PyObject *temp;
 
-    if (PyString_Check(word)) {
+    if (PyBytes_Check(word)) {
         if (! (temp = PyUnicode_FromEncodedObject(word,self->encoding,"strict"))) {
             PyErr_SetString(PyExc_UnicodeError,"unicode conversion failed");
             return NULL;
@@ -95,7 +98,7 @@ static PyObject *normalize(Normalizer *self, PyObject *args)
 
         return list;
 
-    } else if (PyUnicode_Check(data) || PyString_Check(data) ) {
+    } else if (PyUnicode_Check(data) || PyBytes_Check(data) ) {
 
         PyObject *word=NULL;
 
@@ -139,12 +142,12 @@ int checkList(PyObject *o)
         key = PyTuple_GetItem(item,0);
         value = PyTuple_GetItem(item,1);
 
-        if (! (PyString_Check(key) || PyUnicode_Check(key))) {
+        if (! (PyBytes_Check(key) || PyUnicode_Check(key))) {
             PyErr_SetString(PyExc_TypeError, "arg 1 or 2-tuple must be string or unicode");
             goto err;
         }
 
-        if (! (PyString_Check(value) || PyUnicode_Check(value))) {
+        if (! (PyBytes_Check(value) || PyUnicode_Check(value))) {
             PyErr_SetString(PyExc_TypeError, "arg 2 or 2-tuple must be string or unicode");
             goto err;
         }
@@ -171,26 +174,26 @@ static struct PyMethodDef Normalizer_methods[] =
         { NULL, NULL }		/* sentinel */
     };
 
-static  PyObject *
-Normalizer_getattr(Normalizer *self, char *name)
-{
-    return Py_FindMethod(Normalizer_methods, (PyObject *)self, name);
-}
 
 static char NormalizerType__doc__[] = "Normalizer object";
 
 static PyTypeObject NormalizerType = {
+#ifndef PY3K
                                          PyObject_HEAD_INIT(NULL)
                                          0,                            /*ob_size*/
                                          "Normalizer",                 /*tp_name*/
+#else
+                                         PyObject_HEAD_INIT(NULL)
+                                         "Normalizer",                 /*tp_name*/
+#endif
                                          sizeof(Normalizer),           /*tp_basicsize*/
                                          0,                            /*tp_itemsize*/
                                          /* methods */
                                          (destructor)Normalizer_dealloc,  /*tp_dealloc*/
                                          (printfunc)0,                 /*tp_print*/
-                                         (getattrfunc)Normalizer_getattr, /*tp_getattr*/
+                                         (getattrfunc)0              , /*tp_getattr*/
                                          (setattrfunc)0,               /*tp_setattr*/
-                                         (cmpfunc)0,                   /*tp_compare*/
+                                         0,                            /* tp_compare on Py2, reserved on Py3 */
                                          (reprfunc)0,                  /*tp_repr*/
                                          0,                            /*tp_as_number*/
                                          0,                            /*tp_as_sequence*/
@@ -201,7 +204,14 @@ static PyTypeObject NormalizerType = {
 
                                          /* Space for future expansion */
                                          0L,0L,0L,0L,
-                                         NormalizerType__doc__            /* Documentation string */
+                                         NormalizerType__doc__,            /* Documentation string */
+                                         /* tp_traverse       */ 0,
+                                         /* tp_clear          */ (inquiry)0,
+                                         /* tp_richcompare    */ (richcmpfunc)0,
+                                         /* tp_weaklistoffset */ (long)0,
+                                         (getiterfunc)0,		/*tp_iter*/
+                                         /* tp_iternext       */ (iternextfunc)0,
+                                         /* tp_methods        */ Normalizer_methods,
                                      };
 
 
@@ -223,11 +233,11 @@ void CopyTranslationTable(Normalizer *self, PyObject *table) {
         key   = PyTuple_GetItem(item,0);
         value = PyTuple_GetItem(item,1);
 
-        if (PyString_Check(key))
+        if (PyBytes_Check(key))
             key = PyUnicode_FromEncodedObject(key, self->encoding,"strict");
         else Py_XINCREF(key);
 
-        if (PyString_Check(value))
+        if (PyBytes_Check(value))
             value = PyUnicode_FromEncodedObject(value, self->encoding,"strict");
         else Py_XINCREF(value);
 
@@ -278,14 +288,45 @@ static struct PyMethodDef Normalizer_module_methods[] =
     };
 
 
-void
-initnormalizer(void)
-{
+#ifdef PY3K
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "normalizer",                     /* m_name */
+        "TextIndexNG Normalizer module",  /* m_doc */
+        -1,                             /* m_size */
+        Normalizer_module_methods,        /* m_methods */
+        NULL,                           /* m_reload */
+        NULL,                           /* m_traverse */
+        NULL,                           /* m_clear */
+        NULL,                           /* m_free */
+    };
+#endif
 
+static PyObject*
+module_init(void)
+{
+  PyObject* m;
   if (PyType_Ready(&NormalizerType) < 0) {
-	  return;
+	  return NULL;
   }
 
-    Py_InitModule3("normalizer", Normalizer_module_methods,
-                   "TextIndexNG Normalizer module");
+#ifdef PY3K
+  m = PyModule_Create(&moduledef);
+#else
+  m = Py_InitModule3("normalizer", Normalizer_module_methods,
+                       "TextIndexNG Normalizer module");
+#endif
+  return m;
 }
+
+#ifdef PY3K
+PyMODINIT_FUNC PyInit_normalizer(void)
+{
+    return module_init();
+}
+#else
+PyMODINIT_FUNC initnormalizer(void)
+{
+    module_init();
+}
+#endif

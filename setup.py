@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 ###########################################################################
-# TextIndexNG V 3                
+# TextIndexNG V 3
 # The next generation TextIndex for Zope
 #
 # This software is governed by a license. See
@@ -13,8 +13,8 @@ import sys
 import os
 from setuptools import setup, find_packages, Extension
 
-unicode_arg = sys.maxunicode>0xffff and "-DUNICODE_WIDTH=4" or "-DUNICODE_WIDTH=2" 
-ext_args = sys.platform != "win32" and ['-Wall'] or [] 
+unicode_arg = sys.maxunicode>0xffff and "-DUNICODE_WIDTH=4" or "-DUNICODE_WIDTH=2"
+ext_args = sys.platform != "win32" and ['-Wall'] or []
 
 description_txt = open('README.txt').read()
 description_txt += '\n\nChanges\n-------\n\n'
@@ -31,6 +31,18 @@ setup(name="zopyx.txng3.ext",
       zip_safe=False,
       description = 'Helper modules for TextIndexNG3 (Snowball stemmer, normalizer, splitter, etc.)',
       long_description = description_txt,
+      classifiers = [
+          'Intended Audience :: Developers',
+          'Programming Language :: Python',
+          'Programming Language :: Python :: 2',
+          'Programming Language :: Python :: 2.7',
+          'Programming Language :: Python :: 3',
+          'Programming Language :: Python :: 3.5',
+          'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: Implementation :: CPython',
+          'Programming Language :: Python :: Implementation :: PyPy',
+          'Operating System :: OS Independent',
+      ],
       url = "http://sf.net/projects/textindexng/",
       py_modules=['zopyx.__init__', 'zopyx.txng3.__init__', 'zopyx.txng3.ext.__init__'],
       install_requires=('setuptools',),
@@ -47,7 +59,7 @@ setup(name="zopyx.txng3.ext",
             Extension("zopyx.txng3.ext.splitter",
                 [ "zopyx/txng3/ext/splitter_src/splitter.c",
                   "zopyx/txng3/ext/splitter_src/hashtable.c",
-                  "zopyx/txng3/ext/splitter_src/dict.c" 
+                  "zopyx/txng3/ext/splitter_src/dict.c"
                 ],
             ),
 
@@ -97,10 +109,9 @@ setup(name="zopyx.txng3.ext",
                  "zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_swedish.c",
                  "zopyx/txng3/ext/stemmer_src/libstemmer_c/src_c/stem_UTF_8_turkish.c",
                 ],
-                include_dirs=['zopyx/txng3/ext/stemmer_src/libstemmer_c/include', 
+                include_dirs=['zopyx/txng3/ext/stemmer_src/libstemmer_c/include',
                               'zopyx/txng3/ext/stemmer_src/libstemmer_c',
                               'zopyx/txng3/ext/stemmer_src/libstemmer_c/libstemmer'],
             ),
         ]
     )
-
