@@ -6,3 +6,6 @@
 /dist
 /build
 /bin
+.installed.cfg
+develop-eggs/
+eggs/

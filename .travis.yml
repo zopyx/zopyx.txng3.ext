@@ -3,14 +3,17 @@ sudo: false
 
 python:
   - 2.7
-  - pypy
+  - 3.4
+  - 3.5
+  - 3.6
+  - pypy-5.4.1
 
 install:
   - python bootstrap.py
   - bin/buildout
 
 script:
-  - bin/test 
+  - bin/test
 
 
 notifications:

@@ -14,6 +14,10 @@
 #include "libstemmer.h"
 #include "modules.h"
 
+#if PY_MAJOR_VERSION >= 3
+#define PY3K
+#endif
+
 typedef struct
 {
   PyObject_HEAD struct sb_stemmer *stemmer;
@@ -41,7 +45,7 @@ static PyObject *Stemmer_availableStemmers(Stemmer *self,PyObject*args)
     while (1) {
       const char * s = algorithm_names[i];
       if (s) {
-          lang = PyString_FromString(s);
+          lang = PyBytes_FromString(s);
           PyList_Append(list, lang);
           Py_DECREF(lang);
           i++;
@@ -102,7 +106,7 @@ Stemmer_stem (Stemmer * self, PyObject * args)
 				PyUnicode_AsEncodedString (item, "UTF-8", "ignore");
 
 			  // -> byte string
-			  word = PyString_AS_STRING (encoded);
+			  word = PyBytes_AS_STRING (encoded);
 
 			  // now stem
 			  stemmed =
@@ -145,8 +149,13 @@ static struct PyMethodDef Stemmer_methods[] = {
 static char StemmerType__doc__[] = "Stemmer object";
 
 static PyTypeObject StemmerType = {
+#ifndef PY3K
   PyObject_HEAD_INIT (NULL) 0,	/*ob_size */
   "Stemmer",					/*tp_name */
+#else
+  PyObject_HEAD_INIT (NULL)
+  "Stemmer",					/*tp_name */
+#endif
   sizeof (Stemmer),				/*tp_basicsize */
   0,							/*tp_itemsize */
   /* methods */
@@ -154,7 +163,7 @@ static PyTypeObject StemmerType = {
   (printfunc) 0,				/*tp_print */
   (getattrfunc) 0,	/*tp_getattr */
   (setattrfunc) 0,				/*tp_setattr */
-  (cmpfunc) 0,					/*tp_compare */
+  0,					/*tp_compare */
   (reprfunc) 0,					/*tp_repr */
   0,							/*tp_as_number */
   0,							/*tp_as_sequence */
@@ -214,24 +223,47 @@ static struct PyMethodDef stemmer_module_methods[] = {
 };
 
 
-void
-initstemmer (void)
+#ifdef PY3K
+static struct PyModuleDef moduledef = {
+        PyModuleDef_HEAD_INIT,
+        "stemmer",                     /* m_name */
+        "TextIndexNG stemmer module",  /* m_doc */
+        -1,                             /* m_size */
+        stemmer_module_methods,        /* m_methods */
+        NULL,                           /* m_reload */
+        NULL,                           /* m_traverse */
+        NULL,                           /* m_clear */
+        NULL,                           /* m_free */
+    };
+#endif
+
+static PyObject*
+module_init (void)
 {
   PyObject *m;
-  char rev[] = "$Revision: 2373 $";
 
   if (PyType_Ready(&StemmerType) < 0) {
-	  return;
+	  return NULL;
   }
 
   /* Create the module and add the functions */
+#ifdef PY3K
+  m = PyModule_Create(&moduledef);
+#else
   m = Py_InitModule3 ("stemmer", stemmer_module_methods,
 					  "TextIndexNG stemmer module");
-
-  /* Add some symbolic constants to the module */
-  rev[strlen(rev)-2] = '\0';
-  PyModule_AddStringConstant(m, "__version__", rev+11);
-
-  if (PyErr_Occurred () || PyType_Ready(&StemmerType) < 0)
-	Py_FatalError ("can't initialize module stemmer");
+#endif
+  return m;
 }
+
+#ifdef PY3K
+PyMODINIT_FUNC PyInit_stemmer(void)
+{
+    return module_init();
+}
+#else
+PyMODINIT_FUNC initstemmer(void)
+{
+    module_init();
+}
+#endif
