@@ -20,7 +20,7 @@ description_txt = open('README.txt').read()
 description_txt += '\n\nChanges\n-------\n\n'
 description_txt += open('CHANGES.txt').read()
 
-version = '3.5.0'
+version = '4.0.0'
 
 setup(name="zopyx.txng3.ext",
       version=version,
