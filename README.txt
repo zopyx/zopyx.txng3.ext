@@ -19,21 +19,15 @@ License
 -  TextIndexNG3 ships with the python-levenshtein extension written by
    David Necas und published under the GNU Public License (GPL).
 
-Building
---------
 
-Building the egg on Windows (basically a reminder for myself):
+Supported Python versions
+-------------------------
 
-Basically a reminder for myself:
-
-- Install Cygwin
-
-- Install the Windows Python 2.4
-
-- under Cygwin::
-
-      python.exe setup.py build -c mingw32 bdist_egg upload
-
+- Python 2.7
+- Python 3.4
+- Python 3.5
+- Python 3.6
+- PyPy
 
 Contact
 -------
