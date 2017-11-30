@@ -10,7 +10,7 @@ python:
 
 install:
   - pip install zc.buildout
-  - pip install -U setuptools
+  - pip install setuptools==36.8.0
   - buildout bootstrap
   - buildout
 
