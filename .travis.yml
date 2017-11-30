@@ -9,8 +9,9 @@ python:
   - pypy-5.4.1
 
 install:
-  - python bootstrap.py
-  - bin/buildout
+  - pip install zc.buildout
+  - buildout bootstrap
+  - buildout
 
 script:
   - bin/test
