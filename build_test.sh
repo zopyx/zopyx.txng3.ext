@@ -10,6 +10,7 @@ then
 fi
 
 virtualenv-$python_version .
+bin/pip install -U setuptools
 bin/pip install zc.buildout
 bin/zc.buildout bootstrap
 bin/buildout
