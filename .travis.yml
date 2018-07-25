@@ -1,12 +1,26 @@
-language:  python
 sudo: false
+language:  python
 
-python:
-  - 2.7
-  - 3.4
-  - 3.5
-  - 3.6
-  - pypy-5.4.1
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      python: 2.7
+    - os: linux
+      dist: trusty
+      python: 3.5
+    - os: linux
+      dist: trusty
+      python: 3.6
+    - os: linux
+      dist: xenial
+      python: 3.7
+    - os: linux
+      dist: trusty
+      python: pypy-5.4.1
+
+
+https://travis-ci.org/PyFilesystem/webdavfs/builds/408064519
 
 install:
   - pip install zc.buildout
