@@ -20,8 +20,6 @@ matrix:
       python: pypy-5.4.1
 
 
-https://travis-ci.org/PyFilesystem/webdavfs/builds/408064519
-
 install:
   - pip install zc.buildout
   - pip install setuptools==36.8.0
