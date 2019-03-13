@@ -18,7 +18,7 @@ matrix:
       #python: 3.7
     - os: linux
       dist: trusty
-      python: pypy-5.4.1
+      python: pypy3.5
 
 
 install:
