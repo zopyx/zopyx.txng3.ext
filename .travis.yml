@@ -13,13 +13,9 @@ matrix:
     - os: linux
       dist: trusty
       python: 3.6
-      #    - os: linux
-      #dist: xenial
-      #python: 3.7
     - os: linux
-      dist: trusty
-      python: pypy3.5
-
+      dist: xenial
+      python: 3.7
 
 install:
   - pip install zc.buildout
