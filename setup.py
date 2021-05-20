@@ -10,15 +10,16 @@
 
 
 import sys
-import os
-from setuptools import setup, find_packages, Extension
+from setuptools import setup, Extension
 
-unicode_arg = sys.maxunicode>0xffff and "-DUNICODE_WIDTH=4" or "-DUNICODE_WIDTH=2"
-ext_args = sys.platform != "win32" and ['-Wall'] or []
+unicode_arg = "-DUNICODE_WIDTH=4" if sys.maxunicode > 0xffff else "-DUNICODE_WIDTH=2"
+ext_args = ["-Wall"] if sys.platform != "win32" else []
 
-description_txt = open('README.txt').read()
+with open('README.txt') as f:
+    description_txt = f.read()
 description_txt += '\n\nChanges\n-------\n\n'
-description_txt += open('CHANGES.txt').read()
+with open('CHANGES.txt') as f:
+    description_txt += f.read()
 
 version = '4.0.0'
 
@@ -39,6 +40,9 @@ setup(name="zopyx.txng3.ext",
           'Programming Language :: Python :: 3',
           'Programming Language :: Python :: 3.5',
           'Programming Language :: Python :: 3.6',
+          'Programming Language :: Python :: 3.7',
+          'Programming Language :: Python :: 3.8',
+          'Programming Language :: Python :: 3.9',
           'Programming Language :: Python :: Implementation :: CPython',
           'Programming Language :: Python :: Implementation :: PyPy',
           'Operating System :: OS Independent',
