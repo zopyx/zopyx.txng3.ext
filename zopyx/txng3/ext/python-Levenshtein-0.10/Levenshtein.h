@@ -2,8 +2,8 @@
 #ifndef LEVENSHTEIN_H
 #define LEVENSHTEIN_H
 
-#ifndef size_t
-#  include <stdlib.h>
+#ifndef Py_ssize_t
+#  define Py_ssize_t long
 #endif
 
 /* A bit dirty. */
@@ -20,7 +20,7 @@
 #  endif
 #  define lev_wchar wchar_t
 #endif
-typedef unsigned char lev_byte;
+typedef char lev_byte;
 
 /* Edit opration type
  * DON'T CHANGE! used ad arrays indices and the bits are occasionally used
@@ -62,8 +62,8 @@ typedef enum {
  */
 typedef struct {
   LevEditType type;  /* editing operation type */
-  size_t spos;  /* source block position */
-  size_t dpos;  /* destination position */
+  Py_ssize_t spos;  /* source block position */
+  Py_ssize_t dpos;  /* destination position */
 } LevEditOp;
 
 /* Edit operation (difflib-compatible).
@@ -75,310 +75,312 @@ typedef struct {
  */
 typedef struct {
   LevEditType type;  /* editing operation type */
-  size_t sbeg, send;  /* source block begin, end */
-  size_t dbeg, dend;  /* destination block begin, end */
+  Py_ssize_t sbeg, send;  /* source block begin, end */
+  Py_ssize_t dbeg, dend;  /* destination block begin, end */
 } LevOpCode;
 
 /* Matching block (difflib-compatible). */
 typedef struct {
-  size_t spos;
-  size_t dpos;
-  size_t len;
+  Py_ssize_t spos;
+  Py_ssize_t dpos;
+  Py_ssize_t len;
 } LevMatchingBlock;
 
 _LEV_STATIC_PY
-size_t
-lev_edit_distance(size_t len1,
+Py_ssize_t
+lev_edit_distance(Py_ssize_t len1,
                   const lev_byte *string1,
-                  size_t len2,
+                  Py_ssize_t len2,
                   const lev_byte *string2,
                   int xcost);
 
 _LEV_STATIC_PY
-size_t
-lev_u_edit_distance(size_t len1,
+Py_ssize_t
+lev_u_edit_distance(Py_ssize_t len1,
                     const lev_wchar *string1,
-                    size_t len2,
+                    Py_ssize_t len2,
                     const lev_wchar *string2,
                     int xcost);
 
 _LEV_STATIC_PY
-size_t
-lev_hamming_distance(size_t len,
+Py_ssize_t
+lev_hamming_distance(Py_ssize_t len,
                      const lev_byte *string1,
                      const lev_byte *string2);
 
 _LEV_STATIC_PY
-size_t
-lev_u_hamming_distance(size_t len,
+Py_ssize_t
+lev_u_hamming_distance(Py_ssize_t len,
                        const lev_wchar *string1,
                        const lev_wchar *string2);
 
 _LEV_STATIC_PY
 double
-lev_jaro_ratio(size_t len1,
+lev_jaro_ratio(Py_ssize_t len1,
                const lev_byte *string1,
-               size_t len2,
+               Py_ssize_t len2,
                const lev_byte *string2);
 
 _LEV_STATIC_PY
 double
-lev_u_jaro_ratio(size_t len1,
+lev_u_jaro_ratio(Py_ssize_t len1,
                  const lev_wchar *string1,
-                 size_t len2,
+                 Py_ssize_t len2,
                  const lev_wchar *string2);
 
 _LEV_STATIC_PY
 double
-lev_jaro_winkler_ratio(size_t len1, const lev_byte *string1,
-                       size_t len2, const lev_byte *string2,
+lev_jaro_winkler_ratio(Py_ssize_t len1, const lev_byte *string1,
+                       Py_ssize_t len2, const lev_byte *string2,
                        double pfweight);
 
 _LEV_STATIC_PY
 double
-lev_u_jaro_winkler_ratio(size_t len1, const lev_wchar *string1,
-                         size_t len2, const lev_wchar *string2,
+lev_u_jaro_winkler_ratio(Py_ssize_t len1, const lev_wchar *string1,
+                         Py_ssize_t len2, const lev_wchar *string2,
                          double pfweight);
 
 _LEV_STATIC_PY
 lev_byte*
-lev_greedy_median(size_t n,
-                  const size_t *lengths,
+lev_greedy_median(Py_ssize_t n,
+                  const Py_ssize_t *lengths,
                   const lev_byte *strings[],
                   const double *weights,
-                  size_t *medlength);
+                  Py_ssize_t *medlength);
 
 _LEV_STATIC_PY
 lev_wchar*
-lev_u_greedy_median(size_t n,
-                    const size_t *lengths,
+lev_u_greedy_median(Py_ssize_t n,
+                    const Py_ssize_t *lengths,
                     const lev_wchar *strings[],
                     const double *weights,
-                    size_t *medlength);
+                    Py_ssize_t *medlength);
 
 _LEV_STATIC_PY
 lev_byte*
-lev_median_improve(size_t len, const lev_byte *s,
-                   size_t n, const size_t *lengths,
+lev_median_improve(Py_ssize_t len, const lev_byte *s,
+                   Py_ssize_t n, const Py_ssize_t *lengths,
                    const lev_byte *strings[],
                    const double *weights,
-                   size_t *medlength);
+                   Py_ssize_t *medlength);
 
 _LEV_STATIC_PY
 lev_wchar*
-lev_u_median_improve(size_t len, const lev_wchar *s,
-                     size_t n, const size_t *lengths,
+lev_u_median_improve(Py_ssize_t len, const lev_wchar *s,
+                     Py_ssize_t n, const Py_ssize_t *lengths,
                      const lev_wchar *strings[],
                      const double *weights,
-                     size_t *medlength);
+                     Py_ssize_t *medlength);
 
 _LEV_STATIC_PY
 lev_byte*
-lev_quick_median(size_t n,
-                 const size_t *lengths,
+lev_quick_median(Py_ssize_t n,
+                 const Py_ssize_t *lengths,
                  const lev_byte *strings[],
                  const double *weights,
-                 size_t *medlength);
+                 Py_ssize_t *medlength);
 
 _LEV_STATIC_PY
 lev_wchar*
-lev_u_quick_median(size_t n,
-                   const size_t *lengths,
+lev_u_quick_median(Py_ssize_t n,
+                   const Py_ssize_t *lengths,
                    const lev_wchar *strings[],
                    const double *weights,
-                   size_t *medlength);
+                   Py_ssize_t *medlength);
 
 _LEV_STATIC_PY
 lev_byte*
-lev_set_median(size_t n,
-               const size_t *lengths,
+lev_set_median(Py_ssize_t n,
+               const Py_ssize_t *lengths,
                const lev_byte *strings[],
                const double *weights,
-               size_t *medlength);
+               Py_ssize_t *medlength);
 
 _LEV_STATIC_PY
-size_t
-lev_set_median_index(size_t n, const size_t *lengths,
+Py_ssize_t
+lev_set_median_index(Py_ssize_t n, const Py_ssize_t *lengths,
                      const lev_byte *strings[],
                      const double *weights);
 
 _LEV_STATIC_PY
 lev_wchar*
-lev_u_set_median(size_t n,
-                 const size_t *lengths,
+lev_u_set_median(Py_ssize_t n,
+                 const Py_ssize_t *lengths,
                  const lev_wchar *strings[],
                  const double *weights,
-                 size_t *medlength);
+                 Py_ssize_t *medlength);
 
 _LEV_STATIC_PY
-size_t
-lev_u_set_median_index(size_t n, const size_t *lengths,
+Py_ssize_t
+lev_u_set_median_index(Py_ssize_t n, const Py_ssize_t *lengths,
                        const lev_wchar *strings[],
                        const double *weights);
 
 _LEV_STATIC_PY
 double
-lev_edit_seq_distance(size_t n1,
-                      const size_t *lengths1,
+lev_edit_seq_distance(Py_ssize_t n1,
+                      const Py_ssize_t *lengths1,
                       const lev_byte *strings1[],
-                      size_t n2,
-                      const size_t *lengths2,
+                      Py_ssize_t n2,
+                      const Py_ssize_t *lengths2,
                       const lev_byte *strings2[]);
 
 _LEV_STATIC_PY
 double
-lev_u_edit_seq_distance(size_t n1,
-                        const size_t *lengths1,
+lev_u_edit_seq_distance(Py_ssize_t n1,
+                        const Py_ssize_t *lengths1,
                         const lev_wchar *strings1[],
-                        size_t n2,
-                        const size_t *lengths2,
+                        Py_ssize_t n2,
+                        const Py_ssize_t *lengths2,
                         const lev_wchar *strings2[]);
 
 _LEV_STATIC_PY
 double
-lev_set_distance(size_t n1,
-                 const size_t *lengths1,
+lev_set_distance(Py_ssize_t n1,
+                 const Py_ssize_t *lengths1,
                  const lev_byte *strings1[],
-                 size_t n2,
-                 const size_t *lengths2,
+                 Py_ssize_t n2,
+                 const Py_ssize_t *lengths2,
                  const lev_byte *strings2[]);
 
 _LEV_STATIC_PY
 double
-lev_u_set_distance(size_t n1,
-                   const size_t *lengths1,
+lev_u_set_distance(Py_ssize_t n1,
+                   const Py_ssize_t *lengths1,
                    const lev_wchar *strings1[],
-                   size_t n2,
-                   const size_t *lengths2,
+                   Py_ssize_t n2,
+                   const Py_ssize_t *lengths2,
                    const lev_wchar *strings2[]);
 
 _LEV_STATIC_PY
 int
-lev_editops_check_errors(size_t len1,
-                         size_t len2,
-                         size_t n,
+lev_editops_check_errors(Py_ssize_t len1,
+                         Py_ssize_t len2,
+                         Py_ssize_t n,
                          const LevEditOp *ops);
 
 _LEV_STATIC_PY
 int
-lev_opcodes_check_errors(size_t len1,
-                         size_t len2,
-                         size_t nb,
+lev_opcodes_check_errors(Py_ssize_t len1,
+                         Py_ssize_t len2,
+                         Py_ssize_t nb,
                          const LevOpCode *bops);
 
 _LEV_STATIC_PY
 void
-lev_editops_invert(size_t n,
+lev_editops_invert(Py_ssize_t n,
                    LevEditOp *ops);
 
 _LEV_STATIC_PY
 void
-lev_opcodes_invert(size_t nb,
+lev_opcodes_invert(Py_ssize_t nb,
                    LevOpCode *bops);
 
 _LEV_STATIC_PY
 LevMatchingBlock*
-lev_editops_matching_blocks(size_t len1,
-                            size_t len2,
-                            size_t n,
+lev_editops_matching_blocks(Py_ssize_t len1,
+                            Py_ssize_t len2,
+                            Py_ssize_t n,
                             const LevEditOp *ops,
-                            size_t *nmblocks);
+                            Py_ssize_t *nmblocks);
 
 _LEV_STATIC_PY
 LevMatchingBlock*
-lev_opcodes_matching_blocks(size_t len1,
-                            size_t len2,
-                            size_t nb,
+lev_opcodes_matching_blocks(Py_ssize_t len1,
+                            Py_ssize_t len2,
+                            Py_ssize_t nb,
                             const LevOpCode *bops,
-                            size_t *nmblocks);
+                            Py_ssize_t *nmblocks);
 
 _LEV_STATIC_PY
 lev_byte*
-lev_editops_apply(size_t len1,
+lev_editops_apply(Py_ssize_t len1,
                   const lev_byte* string1,
-                  size_t len2,
+                  Py_ssize_t len2,
                   const lev_byte* string2,
-                  size_t n,
+                  Py_ssize_t n,
                   const LevEditOp *ops,
-                  size_t *len);
+                  Py_ssize_t *len);
 
 _LEV_STATIC_PY
 lev_wchar*
-lev_u_editops_apply(size_t len1,
+lev_u_editops_apply(Py_ssize_t len1,
                     const lev_wchar* string1,
-                    size_t len2,
+                    Py_ssize_t len2,
                     const lev_wchar* string2,
-                    size_t n,
+                    Py_ssize_t n,
                     const LevEditOp *ops,
-                    size_t *len);
+                    Py_ssize_t *len);
 
 _LEV_STATIC_PY
 lev_byte*
-lev_opcodes_apply(size_t len1,
+lev_opcodes_apply(Py_ssize_t len1,
                   const lev_byte* string1,
-                  size_t len2,
+                  Py_ssize_t len2,
                   const lev_byte* string2,
-                  size_t nb,
+                  Py_ssize_t nb,
                   const LevOpCode *bops,
-                  size_t *len);
+                  Py_ssize_t *len);
 
 _LEV_STATIC_PY
 lev_wchar*
-lev_u_opcodes_apply(size_t len1,
+lev_u_opcodes_apply(Py_ssize_t len1,
                     const lev_wchar* string1,
-                    size_t len2,
+                    Py_ssize_t len2,
                     const lev_wchar* string2,
-                    size_t nb,
+                    Py_ssize_t nb,
                     const LevOpCode *bops,
-                    size_t *len);
+                    Py_ssize_t *len);
 
 _LEV_STATIC_PY
 LevEditOp*
-lev_editops_find(size_t len1,
+lev_editops_find(Py_ssize_t len1,
                  const lev_byte *string1,
-                 size_t len2,
+                 Py_ssize_t len2,
                  const lev_byte *string2,
-                 size_t *n);
+                 Py_ssize_t *n);
 
 _LEV_STATIC_PY
 LevEditOp*
-lev_u_editops_find(size_t len1,
+lev_u_editops_find(Py_ssize_t len1,
                    const lev_wchar *string1,
-                   size_t len2,
+                   Py_ssize_t len2,
                    const lev_wchar *string2,
-                   size_t *n);
+                   Py_ssize_t *n);
 
 _LEV_STATIC_PY
 LevEditOp*
-lev_opcodes_to_editops(size_t nb,
+lev_opcodes_to_editops(Py_ssize_t nb,
                        const LevOpCode *bops,
-                       size_t *n,
+                       Py_ssize_t *n,
                        int keepkeep);
 
 _LEV_STATIC_PY
 LevOpCode*
-lev_editops_to_opcodes(size_t n,
+lev_editops_to_opcodes(Py_ssize_t n,
                        const LevEditOp *ops,
-                       size_t *nb,
-                       size_t len1,
-                       size_t len2);
-
+                       Py_ssize_t *nb,
+                       Py_ssize_t len1,
+                       Py_ssize_t len2);
+/*
 _LEV_STATIC_PY
-size_t
-lev_editops_total_cost(size_t n,
+Py_ssize_t
+lev_editops_total_cost(Py_ssize_t n,
                        const LevEditOp *ops);
-
+*/
+/*
 _LEV_STATIC_PY
-size_t
-lev_opcodes_total_cost(size_t nb,
+Py_ssize_t
+lev_opcodes_total_cost(Py_ssize_t nb,
                        const LevOpCode *bops);
-
+*/
+/*
 _LEV_STATIC_PY
 LevEditOp*
-lev_editops_normalize(size_t n,
+lev_editops_normalize(Py_ssize_t n,
                       const LevEditOp *ops,
-                      size_t *nnorm);
-
+                      Py_ssize_t *nnorm);
+*/
 /* UNUSED yet */
 _LEV_STATIC_PY
 void

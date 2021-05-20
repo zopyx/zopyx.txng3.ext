@@ -1,3 +1,11 @@
+4.1.0 (unreleased)
+------------------
+
+- Add support for Python 3.7, 3.8 and 3.9.
+- Fix building on Python 3 with certain compilers.
+- Fix certain distance computation functions on Python 3.
+- Fix all deprecation warnings on Python 3.
+
 4.0.0 (2017/05/22)
 ------------------
 - Added support for Python 3.4, 3.5 and 3.6.

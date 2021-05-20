@@ -6,16 +6,9 @@
  LICENSE.txt for the terms of this license.
 */
 
-#include "Python.h"
+#include "../compat.h"
 #include <ctype.h>
 #include "dict.h"
-#if PY_MAJOR_VERSION >= 3
-
-#define PY3K
-#define INT_FROM_LONG(x) PyLong_FromLong(x)
-#else
-#define INT_FROM_LONG(x) PyInt_FromLong(x)
-#endif
 
 #ifndef min
 #define min(a,b) ((a)<(b)?(a):(b))
@@ -225,11 +218,20 @@ Splitter_split(Splitter *self, PyObject *args)
             Py_XDECREF(doc1);
         }
     } else if (PyUnicode_Check(doc)) {
-        PyObject *doc1; // create a *real* copy since we need to modify the string
+        PyObject *doc1; // create a *real* copy since we need to modify the
+			// string
+#ifdef PY3K
+	doc1 = PyUnicode_New(UNICODE_LENGTH(doc), PyUnicode_MAX_CHAR_VALUE(doc));
+	if (PyUnicode_CopyCharacters(doc1, 0, doc, 0, UNICODE_LENGTH(doc)) < 0) {
+	    Py_DECREF(doc1);
+	    return NULL;
+	}
+#else
         doc1 = PyUnicode_FromUnicode(NULL, PyUnicode_GET_SIZE(doc));
         Py_UNICODE_COPY(PyUnicode_AS_UNICODE(doc1),
                         PyUnicode_AS_UNICODE(doc),
                         PyUnicode_GET_SIZE(doc));
+#endif
         splitUnicodeString(self, doc1);
         Py_DECREF(doc1);
     } else {
@@ -437,16 +439,16 @@ int splitString(Splitter *self,PyObject *doc)
 int splitUnicodeString(Splitter *self,PyObject *doc)
 {
     PyObject *word ;
-    Py_UNICODE *s;
-    int i, inside_word=0, start=0, len;
+    UNICODE_T *s;
+    int i, inside_word=0, start=0;
+    Py_ssize_t len;
     register int value, next_value;
 
-    s = PyUnicode_AS_UNICODE(doc);       // start of unicode string
-    len = PyUnicode_GET_SIZE(doc);
+    s = PYSTR_TO_UNICODE_T(doc, &len);       // start of unicode string
 
 
     for (i=0; i<len; i++,s++) {
-        register Py_UNICODE c;
+        register UNICODE_T c;
 
         c = *s;
 
@@ -470,7 +472,7 @@ int splitUnicodeString(Splitter *self,PyObject *doc)
         } else {
 
             if (value == IS_SEPARATOR) {
-                register Py_UNICODE next_c = *(s+1);
+                register UNICODE_T next_c = *(s+1);
 
                 next_value = inode_get(self, next_c);
 
@@ -526,9 +528,10 @@ static char *splitter_args[] = {"separator","singlechar","maxlen","casefolding",
 static PyObject *
 newSplitter(PyObject *modinfo, PyObject *args,PyObject *keywds)
 {
-    int i, max_len=64, single_char=0, casefolding=1;
+    size_t i;
+    int max_len=64, single_char=0, casefolding=1;
     Splitter *self=NULL;
-    unsigned char *separator = "";
+    unsigned char *separator = (unsigned char*)"";
 
     if (! (PyArg_ParseTupleAndKeywords(
                     args,
@@ -574,7 +577,7 @@ newSplitter(PyObject *modinfo, PyObject *args,PyObject *keywds)
         self->small_cache[i] = UNSET ;
 
     // assign separator characters to small cache
-    for (i=0; i<strlen(separator); i++)
+    for (i=0; i<strlen((char*)separator); i++)
         self->small_cache[(int) separator[i]] =  IS_SEPARATOR;
 
     return (PyObject*) self;
