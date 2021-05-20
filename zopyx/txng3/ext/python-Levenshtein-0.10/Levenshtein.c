@@ -649,7 +649,7 @@ levenshtein_common(PyObject *args, const char *name, Py_ssize_t xcost,
     string2 = PyBytes_AS_STRING(arg2);
     {
       Py_ssize_t d = lev_edit_distance(len1, string1, len2, string2, xcost);
-      if (d == (Py_ssize_t)(-1)) {
+      if (d == -1) {
         PyErr_NoMemory();
         return -1;
       }
@@ -673,7 +673,7 @@ levenshtein_common(PyObject *args, const char *name, Py_ssize_t xcost,
       Py_ssize_t d = lev_u_edit_distance(len1, string1, len2, string2, xcost);
       FREE_UNICODE_T(string1);
       FREE_UNICODE_T(string2);
-      if (d == (Py_ssize_t)(-1)) {
+      if (d == -1) {
         PyErr_NoMemory();
         return -1;
       }
@@ -2245,7 +2245,7 @@ lev_edit_distance(Py_ssize_t len1, const lev_byte *string1,
   /* initalize first row */
   row = (Py_ssize_t*)malloc(len2*sizeof(Py_ssize_t));
   if (!row)
-    return (Py_ssize_t)(-1);
+    return -1;
   end = row + len2 - 1;
   for (i = 0; i < len2 - (xcost ? 0 : half); i++)
     row[i] = i;
@@ -2425,7 +2425,7 @@ lev_u_edit_distance(Py_ssize_t len1, const lev_wchar *string1,
   /* initalize first row */
   row = (Py_ssize_t*)malloc(len2*sizeof(Py_ssize_t));
   if (!row)
-    return (Py_ssize_t)(-1);
+    return -1;
   end = row + len2 - 1;
   for (i = 0; i < len2 - (xcost ? 0 : half); i++)
     row[i] = i;
@@ -2869,7 +2869,7 @@ make_symlist(Py_ssize_t n, const Py_ssize_t *lengths,
 
   symset = calloc(0x100, sizeof(short int));
   if (!symset) {
-    *symlistlen = (Py_ssize_t)(-1);
+    *symlistlen = -1;
     return NULL;
   }
   *symlistlen = 0;
@@ -2894,7 +2894,7 @@ make_symlist(Py_ssize_t n, const Py_ssize_t *lengths,
     Py_ssize_t pos = 0;
     symlist = (lev_byte*)malloc((*symlistlen)*sizeof(lev_byte));
     if (!symlist) {
-      *symlistlen = (Py_ssize_t)(-1);
+      *symlistlen = -1;
       free(symset);
       return NULL;
     }
@@ -3478,7 +3478,7 @@ make_usymlist(Py_ssize_t n, const Py_ssize_t *lengths,
   /* find all symbols, use a kind of hash for storage */
   symmap = (HItem*)malloc(0x100*sizeof(HItem));
   if (!symmap) {
-    *symlistlen = (Py_ssize_t)(-1);
+    *symlistlen = -1;
     return NULL;
   }
   /* this is an ugly memory allocation avoiding hack: most hash elements
@@ -3506,7 +3506,7 @@ make_usymlist(Py_ssize_t n, const Py_ssize_t *lengths,
         p->n = (HItem*)malloc(sizeof(HItem));
         if (!p->n) {
           free_usymlist_hash(symmap);
-          *symlistlen = (Py_ssize_t)(-1);
+          *symlistlen = -1;
           return NULL;
         }
         p = p->n;
@@ -3523,7 +3523,7 @@ make_usymlist(Py_ssize_t n, const Py_ssize_t *lengths,
     symlist = (lev_wchar*)malloc((*symlistlen)*sizeof(lev_wchar));
     if (!symlist) {
       free_usymlist_hash(symmap);
-      *symlistlen = (Py_ssize_t)(-1);
+      *symlistlen = -1;
       return NULL;
     }
     for (j = 0; j < 0x100; j++) {
@@ -4083,7 +4083,7 @@ make_symlistset(Py_ssize_t n, const Py_ssize_t *lengths,
   lev_byte *symlist;
 
   if (!symset) {
-    *symlistlen = (Py_ssize_t)(-1);
+    *symlistlen = -1;
     return NULL;
   }
   memset(symset, 0, 0x100*sizeof(double));  /* XXX: needs IEEE doubles?! */
@@ -4107,7 +4107,7 @@ make_symlistset(Py_ssize_t n, const Py_ssize_t *lengths,
     Py_ssize_t pos = 0;
     symlist = (lev_byte*)malloc((*symlistlen)*sizeof(lev_byte));
     if (!symlist) {
-      *symlistlen = (Py_ssize_t)(-1);
+      *symlistlen = -1;
       return NULL;
     }
     for (j = 0; j < 0x100; j++) {
@@ -4281,7 +4281,7 @@ make_usymlistset(Py_ssize_t n, const Py_ssize_t *lengths,
       if (p->c != c) {
         p->n = (HQItem*)malloc(sizeof(HQItem));
         if (!p->n) {
-          *symlistlen = (Py_ssize_t)(-1);
+          *symlistlen = -1;
           return NULL;
         }
         p = p->n;
@@ -4297,7 +4297,7 @@ make_usymlistset(Py_ssize_t n, const Py_ssize_t *lengths,
     Py_ssize_t pos = 0;
     symlist = (lev_wchar*)malloc((*symlistlen)*sizeof(lev_wchar));
     if (!symlist) {
-      *symlistlen = (Py_ssize_t)(-1);
+      *symlistlen = -1;
       return NULL;
     }
     for (j = 0; j < 0x100; j++) {
@@ -4769,7 +4769,7 @@ lev_edit_seq_distance(Py_ssize_t n1, const Py_ssize_t *lengths1,
         q = D;
       else {
         Py_ssize_t d = lev_edit_distance(len1, str1, *(len2p++), *(str2p++), 1);
-        if (d == (Py_ssize_t)(-1)) {
+        if (d == -1) {
           free(row);
           return -1.0;
         }
@@ -4889,7 +4889,7 @@ lev_u_edit_seq_distance(Py_ssize_t n1, const Py_ssize_t *lengths1,
         q = D;
       else {
         Py_ssize_t d = lev_u_edit_distance(len1, str1, *(len2p++), *(str2p++), 1);
-        if (d == (Py_ssize_t)(-1)) {
+        if (d == -1) {
           free(row);
           return -1.0;
         }
@@ -4977,7 +4977,7 @@ lev_set_distance(Py_ssize_t n1, const Py_ssize_t *lengths1,
         *(r++) = 0.0;
       else {
         Py_ssize_t d = lev_edit_distance(len2, str2, *(len1p++), *(str1p)++, 1);
-        if (d == (Py_ssize_t)(-1)) {
+        if (d == -1) {
           free(r);
           return -1.0;
         }
@@ -5000,7 +5000,7 @@ lev_set_distance(Py_ssize_t n1, const Py_ssize_t *lengths1,
     if (l > 0) {
       Py_ssize_t d = lev_edit_distance(lengths1[j], strings1[j],
                                    lengths2[i], strings2[i], 1);
-      if (d == (Py_ssize_t)(-1)) {
+      if (d == -1) {
         free(map);
         return -1.0;
       }
@@ -5077,7 +5077,7 @@ lev_u_set_distance(Py_ssize_t n1, const Py_ssize_t *lengths1,
         *(r++) = 0.0;
       else {
         Py_ssize_t d = lev_u_edit_distance(len2, str2, *(len1p++), *(str1p)++, 1);
-        if (d == (Py_ssize_t)(-1)) {
+        if (d == -1) {
           free(r);
           return -1.0;
         }
@@ -5100,7 +5100,7 @@ lev_u_set_distance(Py_ssize_t n1, const Py_ssize_t *lengths1,
     if (l > 0) {
       Py_ssize_t d = lev_u_edit_distance(lengths1[j], strings1[j],
                                      lengths2[i], strings2[i], 1);
-      if (d == (Py_ssize_t)(-1)) {
+      if (d == -1) {
         free(map);
         return -1.0;
       }
@@ -5485,7 +5485,7 @@ lev_editops_apply(Py_ssize_t len1, const lev_byte *string1,
    * a complete edit sequence, we have to be able to apply anything anywhere */
   dpos = dst = (lev_byte*)malloc((n + len1)*sizeof(lev_byte));
   if (!dst) {
-    *len = (Py_ssize_t)(-1);
+    *len = -1;
     return NULL;
   }
   spos = string1;
@@ -5557,7 +5557,7 @@ lev_u_editops_apply(Py_ssize_t len1, const lev_wchar *string1,
    * a complete edit sequence, we have to be able to apply anything anywhere */
   dpos = dst = (lev_wchar*)malloc((n + len1)*sizeof(lev_wchar));
   if (!dst) {
-    *len = (Py_ssize_t)(-1);
+    *len = -1;
     return NULL;
   }
   spos = string1;
@@ -5627,7 +5627,7 @@ editops_from_cost_matrix(Py_ssize_t len1, const lev_byte *string1, Py_ssize_t of
   ops = (LevEditOp*)malloc((*n)*sizeof(LevEditOp));
   if (!ops) {
     free(matrix);
-    *n = (Py_ssize_t)(-1);
+    *n = -1;
     return NULL;
   }
   i = len1 - 1;
@@ -5745,7 +5745,7 @@ lev_editops_find(Py_ssize_t len1, const lev_byte *string1,
   /* initalize first row and column */
   matrix = (Py_ssize_t*)malloc(len1*len2*sizeof(Py_ssize_t));
   if (!matrix) {
-    *n = (Py_ssize_t)(-1);
+    *n = -1;
     return NULL;
   }
   for (i = 0; i < len2; i++)
@@ -5816,7 +5816,7 @@ ueditops_from_cost_matrix(Py_ssize_t len1, const lev_wchar *string1, Py_ssize_t 
   ops = (LevEditOp*)malloc((*n)*sizeof(LevEditOp));
   if (!ops) {
     free(matrix);
-    *n = (Py_ssize_t)(-1);
+    *n = -1;
     return NULL;
   }
   i = len1 - 1;
@@ -5934,7 +5934,7 @@ lev_u_editops_find(Py_ssize_t len1, const lev_wchar *string1,
   /* initalize first row and column */
   matrix = (Py_ssize_t*)malloc(len1*len2*sizeof(Py_ssize_t));
   if (!matrix) {
-    *n = (Py_ssize_t)(-1);
+    *n = -1;
     return NULL;
   }
   for (i = 0; i < len2; i++)
@@ -6014,7 +6014,7 @@ lev_opcodes_to_editops(Py_ssize_t nb, const LevOpCode *bops,
   /* convert */
   o = ops = (LevEditOp*)malloc((*n)*sizeof(LevEditOp));
   if (!ops) {
-    *n = (Py_ssize_t)(-1);
+    *n = -1;
     return NULL;
   }
   b = bops;
@@ -6144,7 +6144,7 @@ lev_editops_to_opcodes(Py_ssize_t n, const LevEditOp *ops, Py_ssize_t *nb,
   /* convert */
   b = bops = (LevOpCode*)malloc(nbl*sizeof(LevOpCode));
   if (!bops) {
-    *nb = (Py_ssize_t)(-1);
+    *nb = -1;
     return NULL;
   }
   o = ops;
@@ -6247,7 +6247,7 @@ lev_opcodes_apply(Py_ssize_t len1, const lev_byte *string1,
    * a complete edit sequence, we have to be able to apply anything anywhere */
   dpos = dst = (lev_byte*)malloc((len1 + len2)*sizeof(lev_byte));
   if (!dst) {
-    *len = (Py_ssize_t)(-1);
+    *len = -1;
     return NULL;
   }
   spos = string1;
@@ -6307,7 +6307,7 @@ lev_u_opcodes_apply(Py_ssize_t len1, const lev_wchar *string1,
    * a complete edit sequence, we have to be able to apply anything anywhere */
   dpos = dst = (lev_wchar*)malloc((len1 + len2)*sizeof(lev_wchar));
   if (!dst) {
-    *len = (Py_ssize_t)(-1);
+    *len = -1;
     return NULL;
   }
   spos = string1;
@@ -6443,7 +6443,7 @@ lev_editops_matching_blocks(Py_ssize_t len1,
   /* fill the info */
   mb = mblocks = (LevMatchingBlock*)malloc(nmb*sizeof(LevOpCode));
   if (!mblocks) {
-    *nmblocks = (Py_ssize_t)(-1);
+    *nmblocks = -1;
     return NULL;
   }
   o = ops;
@@ -6550,7 +6550,7 @@ lev_opcodes_matching_blocks(Py_ssize_t len1,
   /* convert */
   mb = mblocks = (LevMatchingBlock*)malloc(nmb*sizeof(LevOpCode));
   if (!mblocks) {
-    *nmblocks = (Py_ssize_t)(-1);
+    *nmblocks = -1;
     return NULL;
   }
   b = bops;
