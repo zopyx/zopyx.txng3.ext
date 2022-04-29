@@ -13,7 +13,10 @@ import sys
 import os
 from setuptools import setup, find_packages, Extension
 
-unicode_arg = sys.maxunicode>0xffff and "-DUNICODE_WIDTH=4" or "-DUNICODE_WIDTH=2"
+unicode_arg = (
+    "-DUNICODE_WIDTH=4" if sys.maxunicode > 0xFFFF else "-DUNICODE_WIDTH=2"
+)
+
 ext_args = sys.platform != "win32" and ['-Wall'] or []
 
 description_txt = open('README.txt').read()

@@ -16,9 +16,7 @@ try:
     unicode
 except NameError:
     def unicode(x, enc):
-        if isinstance(x, str):
-            return x
-        return x.decode(enc)
+        return x if isinstance(x, str) else x.decode(enc)
 
 class SplitterTests(unittest.TestCase):
 
