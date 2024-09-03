@@ -1,21 +1,13 @@
 sudo: required
 language:  python
-dist: trusty
 
-matrix:
-  include:
-    - os: linux
-      dist: trusty
-      python: 2.7
-    - os: linux
-      dist: trusty
-      python: 3.5
-    - os: linux
-      dist: trusty
-      python: 3.6
-    - os: linux
-      dist: xenial
-      python: 3.7
+python:
+  - 2.7
+  - 3.5
+  - 3.6
+  - 3.7
+  - 3.8
+  - 3.9
 
 install:
   - pip install zc.buildout
@@ -25,4 +17,3 @@ install:
 
 script:
   - bin/test
-

@@ -96,21 +96,14 @@
 #include <stdio.h>
 #else /* NO_PYTHON */
 #define _LEV_STATIC_PY static
-#define lev_wchar Py_UNICODE
-#include <Python.h>
+#include "../compat.h"
+#define lev_wchar UNICODE_T
+
 #endif /* NO_PYTHON */
 
 #include <assert.h>
 #include "Levenshtein.h"
 
-#if PY_MAJOR_VERSION >= 3
-#define PY3K
-#define INT_FROM_LONG(x) PyLong_FromLong(x)
-#define INT_CHECK(x) PyLong_Check(x)
-#else
-#define INT_FROM_LONG(x) PyInt_FromLong(x)
-#define INT_CHECK(x) PyInt_Check(x)
-#endif
 /* FIXME: inline avaliability should be solved in setup.py, somehow, or
  * even better in Python.h, like const is...
  * this should inline at least with gcc and msvc */
@@ -132,9 +125,9 @@
 #define PYARGCFIX(x) (char*)(x)
 
 /* local functions */
-static size_t*
-munkers_blackman(size_t n1,
-                 size_t n2,
+static Py_ssize_t*
+munkers_blackman(Py_ssize_t n1,
+                 Py_ssize_t n2,
                  double *dists);
 
 #define TAUS113_LCG(n) ((69069UL * n) & 0xffffffffUL)
@@ -530,7 +523,7 @@ static PyMethodDef methods[] = {
 struct {
   PyObject* pystring;
   const char *cstring;
-  size_t len;
+  Py_ssize_t len;
 }
 static opcode_names[] = {
   { NULL, "equal", 0 },
@@ -538,52 +531,52 @@ static opcode_names[] = {
   { NULL, "insert", 0 },
   { NULL, "delete", 0 },
 };
-#define N_OPCODE_NAMES ((sizeof(opcode_names)/sizeof(opcode_names[0])))
+#define N_OPCODE_NAMES (Py_ssize_t)((sizeof(opcode_names)/sizeof(opcode_names[0])))
 
-typedef lev_byte *(*MedianFuncString)(size_t n,
-                                      const size_t *lengths,
+typedef lev_byte *(*MedianFuncString)(Py_ssize_t n,
+                                      const Py_ssize_t *lengths,
                                       const lev_byte *strings[],
                                       const double *weights,
-                                      size_t *medlength);
-typedef Py_UNICODE *(*MedianFuncUnicode)(size_t n,
-                                         const size_t *lengths,
-                                         const Py_UNICODE *strings[],
-                                         const double *weights,
-                                         size_t *medlength);
+                                      Py_ssize_t *medlength);
+typedef UNICODE_T *(*MedianFuncUnicode)(Py_ssize_t n,
+					const Py_ssize_t *lengths,
+					const UNICODE_T *strings[],
+					const double *weights,
+					Py_ssize_t *medlength);
 typedef struct {
   MedianFuncString s;
   MedianFuncUnicode u;
 } MedianFuncs;
 
-typedef lev_byte *(*MedianImproveFuncString)(size_t len, const lev_byte *s,
-                                             size_t n,
-                                             const size_t *lengths,
+typedef lev_byte *(*MedianImproveFuncString)(Py_ssize_t len, const lev_byte *s,
+                                             Py_ssize_t n,
+                                             const Py_ssize_t *lengths,
                                              const lev_byte *strings[],
                                              const double *weights,
-                                             size_t *medlength);
-typedef Py_UNICODE *(*MedianImproveFuncUnicode)(size_t len, const Py_UNICODE *s,
-                                                size_t n,
-                                                const size_t *lengths,
-                                                const Py_UNICODE *strings[],
+                                             Py_ssize_t *medlength);
+typedef UNICODE_T *(*MedianImproveFuncUnicode)(Py_ssize_t len, const UNICODE_T *s,
+                                                Py_ssize_t n,
+                                                const Py_ssize_t *lengths,
+                                                const UNICODE_T *strings[],
                                                 const double *weights,
-                                                size_t *medlength);
+                                                Py_ssize_t *medlength);
 typedef struct {
   MedianImproveFuncString s;
   MedianImproveFuncUnicode u;
 } MedianImproveFuncs;
 
-typedef double (*SetSeqFuncString)(size_t n1,
-                                   const size_t *lengths1,
+typedef double (*SetSeqFuncString)(Py_ssize_t n1,
+                                   const Py_ssize_t *lengths1,
                                    const lev_byte *strings1[],
-                                   size_t n2,
-                                   const size_t *lengths2,
+                                   Py_ssize_t n2,
+                                   const Py_ssize_t *lengths2,
                                    const lev_byte *strings2[]);
-typedef double (*SetSeqFuncUnicode)(size_t n1,
-                                    const size_t *lengths1,
-                                    const Py_UNICODE *strings1[],
-                                    size_t n2,
-                                    const size_t *lengths2,
-                                    const Py_UNICODE *strings2[]);
+typedef double (*SetSeqFuncUnicode)(Py_ssize_t n1,
+                                    const Py_ssize_t *lengths1,
+                                    const UNICODE_T *strings1[],
+                                    Py_ssize_t n2,
+                                    const Py_ssize_t *lengths2,
+                                    const UNICODE_T *strings2[]);
 
 typedef struct {
   SetSeqFuncString s;
@@ -593,20 +586,22 @@ typedef struct {
 static long int
 levenshtein_common(PyObject *args,
                    const char *name,
-                   size_t xcost,
-                   size_t *lensum);
+                   Py_ssize_t xcost,
+                   Py_ssize_t *lensum);
 
 static int
 extract_stringlist(PyObject *list,
                    const char *name,
-                   size_t n,
-                   size_t **sizelist,
+                   Py_ssize_t n,
+                   Py_ssize_t **sizelist,
                    void *strlist);
+static void
+free_stringlist(int type, UNICODE_T** strlist, Py_ssize_t n);
 
 static double*
 extract_weightlist(PyObject *wlist,
                    const char *name,
-                   size_t n);
+                   Py_ssize_t n);
 
 static PyObject*
 median_common(PyObject *args,
@@ -622,7 +617,7 @@ static double
 setseq_common(PyObject *args,
               const char *name,
               SetSeqFuncs foo,
-              size_t *lensum);
+              Py_ssize_t *lensum);
 /* }}} */
 
 /****************************************************************************
@@ -632,12 +627,13 @@ setseq_common(PyObject *args,
  ****************************************************************************/
 /* {{{ */
 
+
 static long int
-levenshtein_common(PyObject *args, const char *name, size_t xcost,
-                   size_t *lensum)
+levenshtein_common(PyObject *args, const char *name, Py_ssize_t xcost,
+                   Py_ssize_t *lensum)
 {
   PyObject *arg1, *arg2;
-  size_t len1, len2;
+  Py_ssize_t len1, len2;
 
   if (!PyArg_UnpackTuple(args, PYARGCFIX(name), 2, 2, &arg1, &arg2))
     return -1;
@@ -652,8 +648,8 @@ levenshtein_common(PyObject *args, const char *name, size_t xcost,
     string1 = PyBytes_AS_STRING(arg1);
     string2 = PyBytes_AS_STRING(arg2);
     {
-      size_t d = lev_edit_distance(len1, string1, len2, string2, xcost);
-      if (d == (size_t)(-1)) {
+      Py_ssize_t d = lev_edit_distance(len1, string1, len2, string2, xcost);
+      if (d == -1) {
         PyErr_NoMemory();
         return -1;
       }
@@ -662,16 +658,22 @@ levenshtein_common(PyObject *args, const char *name, size_t xcost,
   }
   else if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
       && PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
-    Py_UNICODE *string1, *string2;
+    UNICODE_T *string1, *string2;
+    string1 = PYSTR_TO_UNICODE_T(arg1, &len1);
+    if (!string1)
+	return -1;
+    string2 = PYSTR_TO_UNICODE_T(arg2, &len2);
+    if (!string2) {
+	FREE_UNICODE_T(string1);
+	return -1;
+    }
 
-    len1 = PyUnicode_GET_SIZE(arg1);
-    len2 = PyUnicode_GET_SIZE(arg2);
     *lensum = len1 + len2;
-    string1 = PyUnicode_AS_UNICODE(arg1);
-    string2 = PyUnicode_AS_UNICODE(arg2);
     {
-      size_t d = lev_u_edit_distance(len1, string1, len2, string2, xcost);
-      if (d == (size_t)(-1)) {
+      Py_ssize_t d = lev_u_edit_distance(len1, string1, len2, string2, xcost);
+      FREE_UNICODE_T(string1);
+      FREE_UNICODE_T(string2);
+      if (d == -1) {
         PyErr_NoMemory();
         return -1;
       }
@@ -688,7 +690,7 @@ levenshtein_common(PyObject *args, const char *name, size_t xcost,
 static PyObject*
 distance_py(PyObject *self, PyObject *args)
 {
-  size_t lensum;
+  Py_ssize_t lensum;
   long int ldist;
 
   if ((ldist = levenshtein_common(args, "distance", 0, &lensum)) < 0)
@@ -700,7 +702,7 @@ distance_py(PyObject *self, PyObject *args)
 static PyObject*
 ratio_py(PyObject *self, PyObject *args)
 {
-  size_t lensum;
+  Py_ssize_t lensum;
   long int ldist;
 
   if ((ldist = levenshtein_common(args, "ratio", 1, &lensum)) < 0)
@@ -717,7 +719,7 @@ hamming_py(PyObject *self, PyObject *args)
 {
   PyObject *arg1, *arg2;
   const char *name = "hamming";
-  size_t len1, len2;
+  Py_ssize_t len1, len2;
   long int dist;
 
   if (!PyArg_UnpackTuple(args, PYARGCFIX(name), 2, 2, &arg1, &arg2))
@@ -741,18 +743,25 @@ hamming_py(PyObject *self, PyObject *args)
   }
   else if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
       && PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
-    Py_UNICODE *string1, *string2;
+    UNICODE_T *string1, *string2;
+    string1 = PYSTR_TO_UNICODE_T(arg1, &len1);
+    if (!string1)
+	return NULL;
+    string2 = PYSTR_TO_UNICODE_T(arg2, &len2);
+    if (!string2)
+	return NULL;
 
-    len1 = PyUnicode_GET_SIZE(arg1);
-    len2 = PyUnicode_GET_SIZE(arg2);
     if (len1 != len2) {
+      FREE_UNICODE_T(string1);
+      FREE_UNICODE_T(string2);
       PyErr_Format(PyExc_ValueError,
                    "%s expected two unicodes of the same length", name);
       return NULL;
     }
-    string1 = PyUnicode_AS_UNICODE(arg1);
-    string2 = PyUnicode_AS_UNICODE(arg2);
+
     dist = lev_u_hamming_distance(len1, string1, string2);
+    FREE_UNICODE_T(string1);
+    FREE_UNICODE_T(string2);
     return INT_FROM_LONG(dist);
   }
   else {
@@ -767,7 +776,7 @@ jaro_py(PyObject *self, PyObject *args)
 {
   PyObject *arg1, *arg2;
   const char *name = "jaro";
-  size_t len1, len2;
+  Py_ssize_t len1, len2;
 
   if (!PyArg_UnpackTuple(args, PYARGCFIX(name), 2, 2, &arg1, &arg2))
     return NULL;
@@ -784,13 +793,22 @@ jaro_py(PyObject *self, PyObject *args)
   }
   else if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
       && PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
-    Py_UNICODE *string1, *string2;
+    UNICODE_T *string1, *string2;
+    double result;
 
-    len1 = PyUnicode_GET_SIZE(arg1);
-    len2 = PyUnicode_GET_SIZE(arg2);
-    string1 = PyUnicode_AS_UNICODE(arg1);
-    string2 = PyUnicode_AS_UNICODE(arg2);
-    return PyFloat_FromDouble(lev_u_jaro_ratio(len1, string1, len2, string2));
+    string1 = PYSTR_TO_UNICODE_T(arg1, &len1);
+    if (!string1)
+	return NULL;;
+    string2 = PYSTR_TO_UNICODE_T(arg2, &len2);
+    if (!string2) {
+	FREE_UNICODE_T(string1);
+	return NULL;
+    }
+
+    result = lev_u_jaro_ratio(len1, string1, len2, string2);
+    FREE_UNICODE_T(string1);
+    FREE_UNICODE_T(string2);
+    return PyFloat_FromDouble(result);
   }
   else {
     PyErr_Format(PyExc_TypeError,
@@ -805,7 +823,7 @@ jaro_winkler_py(PyObject *self, PyObject *args)
   PyObject *arg1, *arg2, *arg3 = NULL;
   double pfweight = 0.1;
   const char *name = "jaro_winkler";
-  size_t len1, len2;
+  Py_ssize_t len1, len2;
 
   if (!PyArg_UnpackTuple(args, PYARGCFIX(name), 2, 3, &arg1, &arg2, &arg3))
     return NULL;
@@ -836,15 +854,22 @@ jaro_winkler_py(PyObject *self, PyObject *args)
   }
   else if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
       && PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
-    Py_UNICODE *string1, *string2;
-
-    len1 = PyUnicode_GET_SIZE(arg1);
-    len2 = PyUnicode_GET_SIZE(arg2);
-    string1 = PyUnicode_AS_UNICODE(arg1);
-    string2 = PyUnicode_AS_UNICODE(arg2);
-    return PyFloat_FromDouble(lev_u_jaro_winkler_ratio(len1, string1,
-                                                       len2, string2,
-                                                       pfweight));
+    UNICODE_T *string1, *string2;
+    double result;
+    string1 = PYSTR_TO_UNICODE_T(arg1, &len1);
+    if (!string1)
+	return NULL;
+    string2 = PYSTR_TO_UNICODE_T(arg2, &len2);
+    if (!string2) {
+	FREE_UNICODE_T(string1);
+	return NULL;
+    }
+    result = lev_u_jaro_winkler_ratio(len1, string1,
+				      len2, string2,
+				      pfweight);
+    FREE_UNICODE_T(string1);
+    FREE_UNICODE_T(string2);
+    return PyFloat_FromDouble(result);
   }
   else {
     PyErr_Format(PyExc_TypeError,
@@ -884,9 +909,9 @@ setmedian_py(PyObject *self, PyObject *args)
 static PyObject*
 median_common(PyObject *args, const char *name, MedianFuncs foo)
 {
-  size_t n, len;
+  Py_ssize_t n, len;
   void *strings = NULL;
-  size_t *sizes = NULL;
+  Py_ssize_t *sizes = NULL;
   PyObject *strlist = NULL;
   PyObject *wlist = NULL;
   PyObject *strseq = NULL;
@@ -935,17 +960,18 @@ median_common(PyObject *args, const char *name, MedianFuncs foo)
     }
   }
   else if (stringtype == 1) {
-    Py_UNICODE *medstr = foo.u(n, sizes, strings, weights, &len);
+    UNICODE_T *medstr = foo.u(n, sizes, strings, weights, &len);
     if (!medstr && len)
       result = PyErr_NoMemory();
     else {
-      result = PyUnicode_FromUnicode(medstr, len);
+      result = UNICODE_T_TO_PYSTR(medstr, len);
       free(medstr);
     }
   }
   else
     PyErr_Format(PyExc_SystemError, "%s internal error", name);
 
+  free_stringlist(stringtype, strings, n);
   free(strings);
   free(weights);
   free(sizes);
@@ -955,9 +981,9 @@ median_common(PyObject *args, const char *name, MedianFuncs foo)
 static PyObject*
 median_improve_common(PyObject *args, const char *name, MedianImproveFuncs foo)
 {
-  size_t n, len;
+  Py_ssize_t n, len;
   void *strings = NULL;
-  size_t *sizes = NULL;
+  Py_ssize_t *sizes = NULL;
   PyObject *arg1 = NULL;
   PyObject *strlist = NULL;
   PyObject *wlist = NULL;
@@ -1001,6 +1027,7 @@ median_improve_common(PyObject *args, const char *name, MedianImproveFuncs foo)
   }
 
   if (extract_stringlist(strseq, name, n, &sizes, &strings) != stringtype) {
+    free_stringlist(stringtype, strings, n);
     PyErr_Format(PyExc_TypeError,
                  "%s argument types don't match", name);
     free(weights);
@@ -1010,7 +1037,7 @@ median_improve_common(PyObject *args, const char *name, MedianImproveFuncs foo)
   Py_DECREF(strseq);
   if (stringtype == 0) {
     lev_byte *s = PyBytes_AS_STRING(arg1);
-    size_t l = PyBytes_GET_SIZE(arg1);
+    Py_ssize_t l = PyBytes_GET_SIZE(arg1);
     lev_byte *medstr = foo.s(l, s, n, sizes, strings, weights, &len);
     if (!medstr && len)
       result = PyErr_NoMemory();
@@ -1020,19 +1047,27 @@ median_improve_common(PyObject *args, const char *name, MedianImproveFuncs foo)
     }
   }
   else if (stringtype == 1) {
-    Py_UNICODE *s = PyUnicode_AS_UNICODE(arg1);
-    size_t l = PyUnicode_GET_SIZE(arg1);
-    Py_UNICODE *medstr = foo.u(l, s, n, sizes, strings, weights, &len);
-    if (!medstr && len)
-      result = PyErr_NoMemory();
-    else {
-      result = PyUnicode_FromUnicode(medstr, len);
-      free(medstr);
-    }
+      UNICODE_T *s;
+      Py_ssize_t l;
+      s = PYSTR_TO_UNICODE_T(arg1, &l);
+      if (!s) {
+	  result = NULL;
+      }
+      else {
+	  UNICODE_T *medstr = foo.u(l, s, n, sizes, strings, weights, &len);
+	  FREE_UNICODE_T(s);
+	  if (!medstr && len)
+	      result = PyErr_NoMemory();
+	  else {
+	      result = UNICODE_T_TO_PYSTR(medstr, len);
+	      free(medstr);
+	  }
+      }
   }
   else
     PyErr_Format(PyExc_SystemError, "%s internal error", name);
 
+  free_stringlist(stringtype, strings, n);
   free(strings);
   free(weights);
   free(sizes);
@@ -1040,9 +1075,9 @@ median_improve_common(PyObject *args, const char *name, MedianImproveFuncs foo)
 }
 
 static double*
-extract_weightlist(PyObject *wlist, const char *name, size_t n)
+extract_weightlist(PyObject *wlist, const char *name, Py_ssize_t n)
 {
-  size_t i;
+  Py_ssize_t i;
   double *weights = NULL;
   PyObject *seq;
 
@@ -1055,7 +1090,7 @@ extract_weightlist(PyObject *wlist, const char *name, size_t n)
     seq = PySequence_Fast(wlist, name);
     if (PySequence_Fast_GET_SIZE(wlist) != n) {
       PyErr_Format(PyExc_ValueError,
-                   "%s got %i strings but %i weights",
+                   "%s got %ld strings but %ld weights",
                    name, n, PyList_GET_SIZE(wlist));
       Py_DECREF(seq);
       return NULL;
@@ -1070,7 +1105,7 @@ extract_weightlist(PyObject *wlist, const char *name, size_t n)
       if (!number) {
         free(weights);
         PyErr_Format(PyExc_TypeError,
-                     "%s weight #%i is not a Number", name, i);
+                     "%s weight #%ld is not a Number", name, i);
         Py_DECREF(seq);
         return NULL;
       }
@@ -1079,7 +1114,7 @@ extract_weightlist(PyObject *wlist, const char *name, size_t n)
       if (weights[i] < 0) {
         free(weights);
         PyErr_Format(PyExc_ValueError,
-                     "%s weight #%i is negative", name, i);
+                     "%s weight #%ld is negative", name, i);
         Py_DECREF(seq);
         return NULL;
       }
@@ -1104,9 +1139,9 @@ extract_weightlist(PyObject *wlist, const char *name, size_t n)
  */
 static int
 extract_stringlist(PyObject *list, const char *name,
-                   size_t n, size_t **sizelist, void *strlist)
+                   Py_ssize_t n, Py_ssize_t **sizelist, void *strlist)
 {
-  size_t i;
+  Py_ssize_t i;
   PyObject *first;
 
   /* check first object type.  when it's a string then all others must be
@@ -1123,7 +1158,7 @@ extract_stringlist(PyObject *list, const char *name,
 
   if (PyObject_TypeCheck(first, &PyBytes_Type)) {
     lev_byte **strings;
-    size_t *sizes;
+    Py_ssize_t *sizes;
 
     strings = (lev_byte**)malloc(n*sizeof(lev_byte*));
     if (!strings) {
@@ -1131,7 +1166,7 @@ extract_stringlist(PyObject *list, const char *name,
                    "%s cannot allocate memory", name);
       return -1;
     }
-    sizes = (size_t*)malloc(n*sizeof(size_t));
+    sizes = (Py_ssize_t*)malloc(n*sizeof(Py_ssize_t));
     if (!sizes) {
       free(strings);
       PyErr_Format(PyExc_MemoryError,
@@ -1148,7 +1183,7 @@ extract_stringlist(PyObject *list, const char *name,
         free(strings);
         free(sizes);
         PyErr_Format(PyExc_TypeError,
-                     "%s item #%i is not a String", name, i);
+                     "%s item #%ld is not a String", name, i);
         return -1;
       }
       strings[i] = PyBytes_AS_STRING(item);
@@ -1160,23 +1195,24 @@ extract_stringlist(PyObject *list, const char *name,
     return 0;
   }
   if (PyObject_TypeCheck(first, &PyUnicode_Type)) {
-    Py_UNICODE **strings;
-    size_t *sizes;
+    UNICODE_T **strings;
+    Py_ssize_t *sizes;
 
-    strings = (Py_UNICODE**)malloc(n*sizeof(Py_UNICODE*));
+    strings = (UNICODE_T**)malloc(n*sizeof(UNICODE_T*));
     if (!strings) {
       PyErr_NoMemory();
       return -1;
     }
-    sizes = (size_t*)malloc(n*sizeof(size_t));
+    sizes = (Py_ssize_t*)malloc(n*sizeof(Py_ssize_t));
     if (!sizes) {
       free(strings);
       PyErr_NoMemory();
       return -1;
     }
-
-    strings[0] = PyUnicode_AS_UNICODE(first);
-    sizes[0] = PyUnicode_GET_SIZE(first);
+    strings[0] = PYSTR_TO_UNICODE_T(first, &sizes[0]);
+    if (!strings[0]) {
+	return -1;
+    }
     for (i = 1; i < n; i++) {
       PyObject *item = PySequence_Fast_GET_ITEM(list, i);
 
@@ -1184,14 +1220,17 @@ extract_stringlist(PyObject *list, const char *name,
         free(strings);
         free(sizes);
         PyErr_Format(PyExc_TypeError,
-                     "%s item #%i is not a Unicode", name, i);
+                     "%s item #%ld is not a Unicode", name, i);
         return -1;
       }
-      strings[i] = PyUnicode_AS_UNICODE(item);
-      sizes[i] = PyUnicode_GET_SIZE(item);
+    }
+    for (i = 1; i < n; i++) {
+      /* XXX: Assuming that these all work correctly  */
+      PyObject *item = PySequence_Fast_GET_ITEM(list, i);
+      strings[i] = PYSTR_TO_UNICODE_T(item, &sizes[i]);
     }
 
-    *(Py_UNICODE***)strlist = strings;
+    *(UNICODE_T***)strlist = strings;
     *sizelist = sizes;
     return 1;
   }
@@ -1201,11 +1240,21 @@ extract_stringlist(PyObject *list, const char *name,
   return -1;
 }
 
+static void
+free_stringlist(int type, UNICODE_T** strlist, Py_ssize_t n)
+{
+    if (type == 1) {
+	for (int i = 0; i < n; i++) {
+	    FREE_UNICODE_T(strlist[i]);
+	}
+    }
+}
+
 static PyObject*
 seqratio_py(PyObject *self, PyObject *args)
 {
   SetSeqFuncs engines = { lev_edit_seq_distance, lev_u_edit_seq_distance };
-  size_t lensum;
+  Py_ssize_t lensum;
   double r = setseq_common(args, "seqratio", engines, &lensum);
   if (r < 0)
     return NULL;
@@ -1218,7 +1267,7 @@ static PyObject*
 setratio_py(PyObject *self, PyObject *args)
 {
   SetSeqFuncs engines = { lev_set_distance, lev_u_set_distance };
-  size_t lensum;
+  Py_ssize_t lensum;
   double r = setseq_common(args, "setratio", engines, &lensum);
   if (r < 0)
     return NULL;
@@ -1229,13 +1278,13 @@ setratio_py(PyObject *self, PyObject *args)
 
 static double
 setseq_common(PyObject *args, const char *name, SetSeqFuncs foo,
-              size_t *lensum)
+              Py_ssize_t *lensum)
 {
-  size_t n1, n2;
+  Py_ssize_t n1, n2;
   void *strings1 = NULL;
   void *strings2 = NULL;
-  size_t *sizes1 = NULL;
-  size_t *sizes2 = NULL;
+  Py_ssize_t *sizes1 = NULL;
+  Py_ssize_t *sizes2 = NULL;
   PyObject *strlist1;
   PyObject *strlist2;
   PyObject *strseq1;
@@ -1283,6 +1332,7 @@ setseq_common(PyObject *args, const char *name, SetSeqFuncs foo,
   stringtype2 = extract_stringlist(strlist2, name, n2, &sizes2, &strings2);
   Py_DECREF(strseq2);
   if (stringtype2 < 0) {
+    free_stringlist(stringtype1, strings1, n1);
     free(sizes1);
     free(strings1);
     return r;
@@ -1306,6 +1356,8 @@ setseq_common(PyObject *args, const char *name, SetSeqFuncs foo,
   else
     PyErr_Format(PyExc_SystemError, "%s internal error", name);
 
+  free_stringlist(stringtype1, strings1, n1);
+  free_stringlist(stringtype2, strings2, n2);
   free(strings1);
   free(strings2);
   free(sizes1);
@@ -1317,7 +1369,7 @@ static inline LevEditType
 string_to_edittype(PyObject *string)
 {
   const char *s;
-  size_t i, len;
+  Py_ssize_t i, len;
 
   for (i = 0; i < N_OPCODE_NAMES; i++) {
     if (string == opcode_names[i].pystring)
@@ -1344,9 +1396,9 @@ static LevEditOp*
 extract_editops(PyObject *list)
 {
   LevEditOp *ops;
-  size_t i;
+  Py_ssize_t i;
   LevEditType type;
-  size_t n = PyList_GET_SIZE(list);
+  Py_ssize_t n = PyList_GET_SIZE(list);
 
   ops = (LevEditOp*)malloc(n*sizeof(LevEditOp));
   if (!ops)
@@ -1371,13 +1423,13 @@ extract_editops(PyObject *list)
       free(ops);
       return NULL;
     }
-    ops[i].spos = (size_t)PyInt_AS_LONG(item);
+    ops[i].spos = (Py_ssize_t)PyInt_AS_LONG(item);
     item = PyTuple_GET_ITEM(tuple, 2);
     if (!INT_CHECK(item)) {
       free(ops);
       return NULL;
     }
-    ops[i].dpos = (size_t)PyInt_AS_LONG(item);
+    ops[i].dpos = (Py_ssize_t)PyInt_AS_LONG(item);
   }
   return ops;
 }
@@ -1386,9 +1438,9 @@ static LevOpCode*
 extract_opcodes(PyObject *list)
 {
   LevOpCode *bops;
-  size_t i;
+  Py_ssize_t i;
   LevEditType type;
-  size_t nb = PyList_GET_SIZE(list);
+  Py_ssize_t nb = PyList_GET_SIZE(list);
 
   bops = (LevOpCode*)malloc(nb*sizeof(LevOpCode));
   if (!bops)
@@ -1413,34 +1465,34 @@ extract_opcodes(PyObject *list)
       free(bops);
       return NULL;
     }
-    bops[i].sbeg = (size_t)PyInt_AS_LONG(item);
+    bops[i].sbeg = (Py_ssize_t)PyInt_AS_LONG(item);
     item = PyTuple_GET_ITEM(tuple, 2);
     if (!INT_CHECK(item)) {
       free(bops);
       return NULL;
     }
-    bops[i].send = (size_t)PyInt_AS_LONG(item);
+    bops[i].send = (Py_ssize_t)PyInt_AS_LONG(item);
     item = PyTuple_GET_ITEM(tuple, 3);
     if (!INT_CHECK(item)) {
       free(bops);
       return NULL;
     }
-    bops[i].dbeg = (size_t)PyInt_AS_LONG(item);
+    bops[i].dbeg = (Py_ssize_t)PyInt_AS_LONG(item);
     item = PyTuple_GET_ITEM(tuple, 4);
     if (!INT_CHECK(item)) {
       free(bops);
       return NULL;
     }
-    bops[i].dend = (size_t)PyInt_AS_LONG(item);
+    bops[i].dend = (Py_ssize_t)PyInt_AS_LONG(item);
   }
   return bops;
 }
 
 static PyObject*
-editops_to_tuple_list(size_t n, LevEditOp *ops)
+editops_to_tuple_list(Py_ssize_t n, LevEditOp *ops)
 {
   PyObject *list;
-  size_t i;
+  Py_ssize_t i;
 
   list = PyList_New(n);
   for (i = 0; i < n; i++, ops++) {
@@ -1457,11 +1509,11 @@ editops_to_tuple_list(size_t n, LevEditOp *ops)
 }
 
 static PyObject*
-matching_blocks_to_tuple_list(size_t len1, size_t len2,
-                              size_t nmb, LevMatchingBlock *mblocks)
+matching_blocks_to_tuple_list(Py_ssize_t len1, Py_ssize_t len2,
+                              Py_ssize_t nmb, LevMatchingBlock *mblocks)
 {
   PyObject *list, *tuple;
-  size_t i;
+  Py_ssize_t i;
 
   list = PyList_New(nmb + 1);
   for (i = 0; i < nmb; i++, mblocks++) {
@@ -1480,18 +1532,18 @@ matching_blocks_to_tuple_list(size_t len1, size_t len2,
   return list;
 }
 
-static size_t
+static Py_ssize_t
 get_length_of_anything(PyObject *object)
 {
   if (INT_CHECK(object)) {
     long int len = PyInt_AS_LONG(object);
     if (len < 0)
       len = -1;
-    return (size_t)len;
+    return (Py_ssize_t)len;
   }
   if (PySequence_Check(object))
     return PySequence_Length(object);
-  return (size_t)-1;
+  return (Py_ssize_t)-1;
 }
 
 static PyObject*
@@ -1499,7 +1551,7 @@ editops_py(PyObject *self, PyObject *args)
 {
   PyObject *arg1, *arg2, *arg3 = NULL;
   PyObject *oplist;
-  size_t len1, len2, n;
+  Py_ssize_t len1, len2, n;
   LevEditOp *ops;
   LevOpCode *bops;
 
@@ -1521,7 +1573,7 @@ editops_py(PyObject *self, PyObject *args)
     }
     len1 = get_length_of_anything(arg2);
     len2 = get_length_of_anything(arg3);
-    if (len1 == (size_t)-1 || len2 == (size_t)-1) {
+    if (len1 == (Py_ssize_t)-1 || len2 == (Py_ssize_t)-1) {
       PyErr_Format(PyExc_ValueError,
                   "editops second and third argument must specify sizes");
       return NULL;
@@ -1574,13 +1626,18 @@ editops_py(PyObject *self, PyObject *args)
   }
   else if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
       && PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
-    Py_UNICODE *string1, *string2;
-
-    len1 = PyUnicode_GET_SIZE(arg1);
-    len2 = PyUnicode_GET_SIZE(arg2);
-    string1 = PyUnicode_AS_UNICODE(arg1);
-    string2 = PyUnicode_AS_UNICODE(arg2);
+    UNICODE_T *string1, *string2;
+    string1 = PYSTR_TO_UNICODE_T(arg1, &len1);
+    if (!string1)
+	return NULL;
+    string2 = PYSTR_TO_UNICODE_T(arg2, &len2);
+    if (!string2) {
+	FREE_UNICODE_T(string1);
+	return NULL;
+    }
     ops = lev_u_editops_find(len1, string1, len2, string2, &n);
+    FREE_UNICODE_T(string1);
+    FREE_UNICODE_T(string2);
   }
   else {
     PyErr_Format(PyExc_TypeError,
@@ -1595,10 +1652,10 @@ editops_py(PyObject *self, PyObject *args)
 }
 
 static PyObject*
-opcodes_to_tuple_list(size_t nb, LevOpCode *bops)
+opcodes_to_tuple_list(Py_ssize_t nb, LevOpCode *bops)
 {
   PyObject *list;
-  size_t i;
+  Py_ssize_t i;
 
   list = PyList_New(nb);
   for (i = 0; i < nb; i++, bops++) {
@@ -1621,7 +1678,7 @@ opcodes_py(PyObject *self, PyObject *args)
 {
   PyObject *arg1, *arg2, *arg3 = NULL;
   PyObject *oplist;
-  size_t len1, len2, n, nb;
+  Py_ssize_t len1, len2, n, nb;
   LevEditOp *ops;
   LevOpCode *bops;
 
@@ -1639,7 +1696,7 @@ opcodes_py(PyObject *self, PyObject *args)
     n = PyList_GET_SIZE(arg1);
     len1 = get_length_of_anything(arg2);
     len2 = get_length_of_anything(arg3);
-    if (len1 == (size_t)-1 || len2 == (size_t)-1) {
+    if (len1 == (Py_ssize_t)-1 || len2 == (Py_ssize_t)-1) {
       PyErr_Format(PyExc_ValueError,
                   "opcodes second and third argument must specify sizes");
       return NULL;
@@ -1692,13 +1749,18 @@ opcodes_py(PyObject *self, PyObject *args)
   }
   else if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
       && PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
-    Py_UNICODE *string1, *string2;
-
-    len1 = PyUnicode_GET_SIZE(arg1);
-    len2 = PyUnicode_GET_SIZE(arg2);
-    string1 = PyUnicode_AS_UNICODE(arg1);
-    string2 = PyUnicode_AS_UNICODE(arg2);
+    UNICODE_T *string1, *string2;
+    string1 = PYSTR_TO_UNICODE_T(arg1, &len1);
+    if (!string1)
+	return NULL;
+    string2 = PYSTR_TO_UNICODE_T(arg2, &len2);
+    if (!string2) {
+	FREE_UNICODE_T(string1);
+	return NULL;
+    }
     ops = lev_u_editops_find(len1, string1, len2, string2, &n);
+    FREE_UNICODE_T(string1);
+    FREE_UNICODE_T(string2);
   }
   else {
     PyErr_Format(PyExc_TypeError,
@@ -1720,7 +1782,7 @@ static PyObject*
 inverse_py(PyObject *self, PyObject *args)
 {
   PyObject *list, *result;
-  size_t n;
+  Py_ssize_t n;
   LevEditOp *ops;
   LevOpCode *bops;
 
@@ -1756,7 +1818,7 @@ static PyObject*
 apply_edit_py(PyObject *self, PyObject *args)
 {
   PyObject *list, *result, *arg1, *arg2;
-  size_t n, len, len1, len2;
+  Py_ssize_t n, len, len1, len2;
   LevEditOp *ops;
   LevOpCode *bops;
 
@@ -1825,30 +1887,38 @@ apply_edit_py(PyObject *self, PyObject *args)
   }
   if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
       && PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
-    Py_UNICODE *string1, *string2, *s;
+    UNICODE_T *string1, *string2, *s;
 
     if (!n) {
       Py_INCREF(arg1);
       return arg1;
     }
-    len1 = PyUnicode_GET_SIZE(arg1);
-    len2 = PyUnicode_GET_SIZE(arg2);
-    string1 = PyUnicode_AS_UNICODE(arg1);
-    string2 = PyUnicode_AS_UNICODE(arg2);
+    string1 = PYSTR_TO_UNICODE_T(arg1, &len1);
+    if (!string1)
+	return NULL;
+    string2 = PYSTR_TO_UNICODE_T(arg2, &len2);
+    if (!string2) {
+	FREE_UNICODE_T(string1);
+	return NULL;
+    }
 
     if ((ops = extract_editops(list)) != NULL) {
       if (lev_editops_check_errors(len1, len2, n, ops)) {
         PyErr_Format(PyExc_ValueError,
                      "apply_edit edit oprations are invalid or inapplicable");
         free(ops);
+	FREE_UNICODE_T(string1);
+	FREE_UNICODE_T(string2);
         return NULL;
       }
       s = lev_u_editops_apply(len1, string1, len2, string2,
                               n, ops, &len);
       free(ops);
+      FREE_UNICODE_T(string1);
+      FREE_UNICODE_T(string2);
       if (!s && len)
         return PyErr_NoMemory();
-      result = PyUnicode_FromUnicode(s, len);
+      result = UNICODE_T_TO_PYSTR(s, len);
       free(s);
       return result;
     }
@@ -1864,7 +1934,7 @@ apply_edit_py(PyObject *self, PyObject *args)
       free(bops);
       if (!s && len)
         return PyErr_NoMemory();
-      result = PyUnicode_FromUnicode(s, len);
+      result = UNICODE_T_TO_PYSTR(s, len);
       free(s);
       return result;
     }
@@ -1885,7 +1955,7 @@ static PyObject*
 matching_blocks_py(PyObject *self, PyObject *args)
 {
   PyObject *list, *arg1, *arg2, *result;
-  size_t n, nmb, len1, len2;
+  Py_ssize_t n, nmb, len1, len2;
   LevEditOp *ops;
   LevOpCode *bops;
   LevMatchingBlock *mblocks;
@@ -1904,7 +1974,7 @@ matching_blocks_py(PyObject *self, PyObject *args)
   n = PyList_GET_SIZE(list);
   len1 = get_length_of_anything(arg1);
   len2 = get_length_of_anything(arg2);
-  if (len1 == (size_t)-1 || len2 == (size_t)-1) {
+  if (len1 == (Py_ssize_t)-1 || len2 == (Py_ssize_t)-1) {
     PyErr_Format(PyExc_ValueError,
                  "matching_blocks second and third argument "
                  "must specify sizes");
@@ -1967,7 +2037,7 @@ static PyObject*
 module_init(void)
 {
   PyObject *module;
-  size_t i;
+  Py_ssize_t i;
 #ifdef PY3K
   module = PyModule_Create(&moduledef);
 #else
@@ -1981,11 +2051,12 @@ module_init(void)
 #ifdef PY3K
         PyBytes_FromString(opcode_names[i].cstring);
 #else
-        PyBytes_InternFromString(opcode_names[i].cstring);
+        PyString_InternFromString(opcode_names[i].cstring);
 #endif
     opcode_names[i].len = strlen(opcode_names[i].cstring);
   }
   lev_init_rng(0);
+  return module;
 }
 
 #ifdef PY3K
@@ -2121,15 +2192,15 @@ lev_init_rng(unsigned long int seed)
  *
  * Returns: The edit distance.
  **/
-_LEV_STATIC_PY size_t
-lev_edit_distance(size_t len1, const lev_byte *string1,
-                  size_t len2, const lev_byte *string2,
+_LEV_STATIC_PY Py_ssize_t
+lev_edit_distance(Py_ssize_t len1, const lev_byte *string1,
+                  Py_ssize_t len2, const lev_byte *string2,
                   int xcost)
 {
-  size_t i;
-  size_t *row;  /* we only need to keep one row of costs */
-  size_t *end;
-  size_t half;
+  Py_ssize_t i;
+  Py_ssize_t *row;  /* we only need to keep one row of costs */
+  Py_ssize_t *end;
+  Py_ssize_t half;
 
   /* strip common prefix */
   while (len1 > 0 && len2 > 0 && *string1 == *string2) {
@@ -2153,7 +2224,7 @@ lev_edit_distance(size_t len1, const lev_byte *string1,
 
   /* make the inner cycle (i.e. string2) the longer one */
   if (len1 > len2) {
-    size_t nx = len1;
+    Py_ssize_t nx = len1;
     const lev_byte *sx = string1;
     len1 = len2;
     len2 = nx;
@@ -2172,9 +2243,9 @@ lev_edit_distance(size_t len1, const lev_byte *string1,
   half = len1 >> 1;
 
   /* initalize first row */
-  row = (size_t*)malloc(len2*sizeof(size_t));
+  row = (Py_ssize_t*)malloc(len2*sizeof(Py_ssize_t));
   if (!row)
-    return (size_t)(-1);
+    return -1;
   end = row + len2 - 1;
   for (i = 0; i < len2 - (xcost ? 0 : half); i++)
     row[i] = i;
@@ -2184,11 +2255,11 @@ lev_edit_distance(size_t len1, const lev_byte *string1,
    * fast.  */
   if (xcost) {
     for (i = 1; i < len1; i++) {
-      size_t *p = row + 1;
+      Py_ssize_t *p = row + 1;
       const lev_byte char1 = string1[i - 1];
       const lev_byte *char2p = string2;
-      size_t D = i;
-      size_t x = i;
+      Py_ssize_t D = i;
+      Py_ssize_t x = i;
       while (p <= end) {
         if (char1 == *(char2p++))
           x = --D;
@@ -2209,14 +2280,14 @@ lev_edit_distance(size_t len1, const lev_byte *string1,
      * necessary */
     row[0] = len1 - half - 1;
     for (i = 1; i < len1; i++) {
-      size_t *p;
+      Py_ssize_t *p;
       const lev_byte char1 = string1[i - 1];
       const lev_byte *char2p;
-      size_t D, x;
+      Py_ssize_t D, x;
       /* skip the upper triangle */
       if (i >= len1 - half) {
-        size_t offset = i - (len1 - half);
-        size_t c3;
+        Py_ssize_t offset = i - (len1 - half);
+        Py_ssize_t c3;
 
         char2p = string2 + offset;
         p = row + offset;
@@ -2238,7 +2309,7 @@ lev_edit_distance(size_t len1, const lev_byte *string1,
         end = row + len2 + i - half - 2;
       /* main */
       while (p <= end) {
-        size_t c3 = --D + (char1 != *(char2p++));
+        Py_ssize_t c3 = --D + (char1 != *(char2p++));
         x++;
         if (x > c3)
           x = c3;
@@ -2250,7 +2321,7 @@ lev_edit_distance(size_t len1, const lev_byte *string1,
       }
       /* lower triangle sentinel */
       if (i <= half) {
-        size_t c3 = --D + (char1 != *char2p);
+        Py_ssize_t c3 = --D + (char1 != *char2p);
         x++;
         if (x > c3)
           x = c3;
@@ -2263,26 +2334,26 @@ lev_edit_distance(size_t len1, const lev_byte *string1,
   free(row);
   return i;
 }
-
+/*
 _LEV_STATIC_PY double
-lev_edit_distance_sod(size_t len, const lev_byte *string,
-                      size_t n, const size_t *lengths,
+lev_edit_distance_sod(Py_ssize_t len, const lev_byte *string,
+                      Py_ssize_t n, const Py_ssize_t *lengths,
                       const lev_byte *strings[],
                       const double *weights,
                       int xcost)
 {
-  size_t i, d;
+  Py_ssize_t i, d;
   double sum = 0.0;
 
   for (i = 0; i < n; i++) {
     d = lev_edit_distance(len, string, lengths[i], strings[i], xcost);
-    if (d == (size_t)-1)
+    if (d == (Py_ssize_t)-1)
       return -1.0;
     sum += weights[i]*d;
   }
   return sum;
 }
-
+*/
 /**
  * lev_u_edit_distance:
  * @len1: The length of @string1.
@@ -2298,15 +2369,15 @@ lev_edit_distance_sod(size_t len, const lev_byte *string,
  *
  * Returns: The edit distance.
  **/
-_LEV_STATIC_PY size_t
-lev_u_edit_distance(size_t len1, const lev_wchar *string1,
-                    size_t len2, const lev_wchar *string2,
+_LEV_STATIC_PY Py_ssize_t
+lev_u_edit_distance(Py_ssize_t len1, const lev_wchar *string1,
+                    Py_ssize_t len2, const lev_wchar *string2,
                     int xcost)
 {
-  size_t i;
-  size_t *row;  /* we only need to keep one row of costs */
-  size_t *end;
-  size_t half;
+  Py_ssize_t i;
+  Py_ssize_t *row;  /* we only need to keep one row of costs */
+  Py_ssize_t *end;
+  Py_ssize_t half;
 
   /* strip common prefix */
   while (len1 > 0 && len2 > 0 && *string1 == *string2) {
@@ -2330,7 +2401,7 @@ lev_u_edit_distance(size_t len1, const lev_wchar *string1,
 
   /* make the inner cycle (i.e. string2) the longer one */
   if (len1 > len2) {
-    size_t nx = len1;
+    Py_ssize_t nx = len1;
     const lev_wchar *sx = string1;
     len1 = len2;
     len2 = nx;
@@ -2352,9 +2423,9 @@ lev_u_edit_distance(size_t len1, const lev_wchar *string1,
   half = len1 >> 1;
 
   /* initalize first row */
-  row = (size_t*)malloc(len2*sizeof(size_t));
+  row = (Py_ssize_t*)malloc(len2*sizeof(Py_ssize_t));
   if (!row)
-    return (size_t)(-1);
+    return -1;
   end = row + len2 - 1;
   for (i = 0; i < len2 - (xcost ? 0 : half); i++)
     row[i] = i;
@@ -2364,11 +2435,11 @@ lev_u_edit_distance(size_t len1, const lev_wchar *string1,
    * fast.  */
   if (xcost) {
     for (i = 1; i < len1; i++) {
-      size_t *p = row + 1;
+      Py_ssize_t *p = row + 1;
       const lev_wchar char1 = string1[i - 1];
       const lev_wchar *char2p = string2;
-      size_t D = i - 1;
-      size_t x = i;
+      Py_ssize_t D = i - 1;
+      Py_ssize_t x = i;
       while (p <= end) {
         if (char1 == *(char2p++))
           x = D;
@@ -2388,14 +2459,14 @@ lev_u_edit_distance(size_t len1, const lev_wchar *string1,
      * necessary */
     row[0] = len1 - half - 1;
     for (i = 1; i < len1; i++) {
-      size_t *p;
+      Py_ssize_t *p;
       const lev_wchar char1 = string1[i - 1];
       const lev_wchar *char2p;
-      size_t D, x;
+      Py_ssize_t D, x;
       /* skip the upper triangle */
       if (i >= len1 - half) {
-        size_t offset = i - (len1 - half);
-        size_t c3;
+        Py_ssize_t offset = i - (len1 - half);
+        Py_ssize_t c3;
 
         char2p = string2 + offset;
         p = row + offset;
@@ -2417,7 +2488,7 @@ lev_u_edit_distance(size_t len1, const lev_wchar *string1,
         end = row + len2 + i - half - 2;
       /* main */
       while (p <= end) {
-        size_t c3 = --D + (char1 != *(char2p++));
+        Py_ssize_t c3 = --D + (char1 != *(char2p++));
         x++;
         if (x > c3)
           x = c3;
@@ -2429,7 +2500,7 @@ lev_u_edit_distance(size_t len1, const lev_wchar *string1,
       }
       /* lower triangle sentinel */
       if (i <= half) {
-        size_t c3 = --D + (char1 != *char2p);
+        Py_ssize_t c3 = --D + (char1 != *char2p);
         x++;
         if (x > c3)
           x = c3;
@@ -2442,25 +2513,26 @@ lev_u_edit_distance(size_t len1, const lev_wchar *string1,
   free(row);
   return i;
 }
-
+/*
 _LEV_STATIC_PY double
-lev_u_edit_distance_sod(size_t len, const lev_wchar *string,
-                        size_t n, const size_t *lengths,
+lev_u_edit_distance_sod(Py_ssize_t len, const lev_wchar *string,
+                        Py_ssize_t n, const Py_ssize_t *lengths,
                         const lev_wchar *strings[],
                         const double *weights,
                         int xcost)
 {
-  size_t i, d;
+  Py_ssize_t i, d;
   double sum = 0.0;
 
   for (i = 0; i < n; i++) {
     d = lev_u_edit_distance(len, string, lengths[i], strings[i], xcost);
-    if (d == (size_t)-1)
+    if (d == (Py_ssize_t)-1)
       return -1.0;
     sum += weights[i]*d;
   }
   return sum;
 }
+*/
 /* }}} */
 
 
@@ -2482,12 +2554,12 @@ lev_u_edit_distance_sod(size_t len, const lev_wchar *string,
  *
  * Returns: The Hamming distance.
  **/
-_LEV_STATIC_PY size_t
-lev_hamming_distance(size_t len,
+_LEV_STATIC_PY Py_ssize_t
+lev_hamming_distance(Py_ssize_t len,
                      const lev_byte *string1,
                      const lev_byte *string2)
 {
-  size_t dist, i;
+  Py_ssize_t dist, i;
 
   dist = 0;
   for (i = len; i; i--) {
@@ -2512,12 +2584,12 @@ lev_hamming_distance(size_t len,
  *
  * Returns: The Hamming distance.
  **/
-_LEV_STATIC_PY size_t
-lev_u_hamming_distance(size_t len,
+_LEV_STATIC_PY Py_ssize_t
+lev_u_hamming_distance(Py_ssize_t len,
                        const lev_wchar *string1,
                        const lev_wchar *string2)
 {
-  size_t dist, i;
+  Py_ssize_t dist, i;
 
   dist = 0;
   for (i = len; i; i--) {
@@ -2540,11 +2612,11 @@ lev_u_hamming_distance(size_t len,
  * Returns: The Jaro metric of @string1 and @string2.
  **/
 _LEV_STATIC_PY double
-lev_jaro_ratio(size_t len1, const lev_byte *string1,
-               size_t len2, const lev_byte *string2)
+lev_jaro_ratio(Py_ssize_t len1, const lev_byte *string1,
+               Py_ssize_t len2, const lev_byte *string2)
 {
-  size_t i, j, halflen, trans, match, to;
-  size_t *idx;
+  Py_ssize_t i, j, halflen, trans, match, to;
+  Py_ssize_t *idx;
   double md;
 
   if (len1 == 0 || len2 == 0) {
@@ -2566,7 +2638,7 @@ lev_jaro_ratio(size_t len1, const lev_byte *string1,
   }
 
   halflen = (len1 + 1)/2;
-  idx = (size_t*)calloc(len1, sizeof(size_t));
+  idx = (Py_ssize_t*)calloc(len1, sizeof(Py_ssize_t));
   if (!idx)
     return -1.0;
 
@@ -2633,11 +2705,11 @@ lev_jaro_ratio(size_t len1, const lev_byte *string1,
  * Returns: The Jaro metric of @string1 and @string2.
  **/
 _LEV_STATIC_PY double
-lev_u_jaro_ratio(size_t len1, const lev_wchar *string1,
-                 size_t len2, const lev_wchar *string2)
+lev_u_jaro_ratio(Py_ssize_t len1, const lev_wchar *string1,
+                 Py_ssize_t len2, const lev_wchar *string2)
 {
-  size_t i, j, halflen, trans, match, to;
-  size_t *idx;
+  Py_ssize_t i, j, halflen, trans, match, to;
+  Py_ssize_t *idx;
   double md;
 
   if (len1 == 0 || len2 == 0) {
@@ -2659,7 +2731,7 @@ lev_u_jaro_ratio(size_t len1, const lev_wchar *string1,
   }
 
   halflen = (len1 + 1)/2;
-  idx = (size_t*)calloc(len1, sizeof(size_t));
+  idx = (Py_ssize_t*)calloc(len1, sizeof(Py_ssize_t));
   if (!idx)
     return -1.0;
 
@@ -2722,12 +2794,12 @@ lev_u_jaro_ratio(size_t len1, const lev_wchar *string1,
  * Returns: The Jaro-Winkler metric of @string1 and @string2.
  **/
 _LEV_STATIC_PY double
-lev_jaro_winkler_ratio(size_t len1, const lev_byte *string1,
-                       size_t len2, const lev_byte *string2,
+lev_jaro_winkler_ratio(Py_ssize_t len1, const lev_byte *string1,
+                       Py_ssize_t len2, const lev_byte *string2,
                        double pfweight)
 {
   double j;
-  size_t p, m;
+  Py_ssize_t p, m;
 
   j = lev_jaro_ratio(len1, string1, len2, string2);
   m = len1 < len2 ? len1 : len2;
@@ -2758,12 +2830,12 @@ lev_jaro_winkler_ratio(size_t len1, const lev_byte *string1,
  * Returns: The Jaro-Winkler metric of @string1 and @string2.
  **/
 _LEV_STATIC_PY double
-lev_u_jaro_winkler_ratio(size_t len1, const lev_wchar *string1,
-                         size_t len2, const lev_wchar *string2,
+lev_u_jaro_winkler_ratio(Py_ssize_t len1, const lev_wchar *string1,
+                         Py_ssize_t len2, const lev_wchar *string2,
                          double pfweight)
 {
   double j;
-  size_t p, m;
+  Py_ssize_t p, m;
 
   j = lev_u_jaro_ratio(len1, string1, len2, string2);
   m = len1 < len2 ? len1 : len2;
@@ -2787,17 +2859,17 @@ lev_u_jaro_winkler_ratio(size_t len1, const lev_wchar *string1,
  * in any of them (symset).  meanwhile, count how many different symbols
  * there are (used below for symlist). */
 static lev_byte*
-make_symlist(size_t n, const size_t *lengths,
-             const lev_byte *strings[], size_t *symlistlen)
+make_symlist(Py_ssize_t n, const Py_ssize_t *lengths,
+             const lev_byte *strings[], Py_ssize_t *symlistlen)
 {
   short int *symset;  /* indexed by ALL symbols, contains 1 for symbols
                          present in the strings, zero for others */
-  size_t i, j;
+  Py_ssize_t i, j;
   lev_byte *symlist;
 
   symset = calloc(0x100, sizeof(short int));
   if (!symset) {
-    *symlistlen = (size_t)(-1);
+    *symlistlen = -1;
     return NULL;
   }
   *symlistlen = 0;
@@ -2819,10 +2891,10 @@ make_symlist(size_t n, const size_t *lengths,
   /* create dense symbol table, so we can easily iterate over only characters
    * present in the strings */
   {
-    size_t pos = 0;
+    Py_ssize_t pos = 0;
     symlist = (lev_byte*)malloc((*symlistlen)*sizeof(lev_byte));
     if (!symlist) {
-      *symlistlen = (size_t)(-1);
+      *symlistlen = -1;
       free(symset);
       return NULL;
     }
@@ -2854,32 +2926,32 @@ make_symlist(size_t n, const size_t *lengths,
  *          is stored in @medlength.
  **/
 _LEV_STATIC_PY lev_byte*
-lev_greedy_median(size_t n, const size_t *lengths,
+lev_greedy_median(Py_ssize_t n, const Py_ssize_t *lengths,
                   const lev_byte *strings[],
                   const double *weights,
-                  size_t *medlength)
+                  Py_ssize_t *medlength)
 {
-  size_t i;  /* usually iterates over strings (n) */
-  size_t j;  /* usually iterates over characters */
-  size_t len;  /* usually iterates over the approximate median string */
+  Py_ssize_t i;  /* usually iterates over strings (n) */
+  Py_ssize_t j;  /* usually iterates over characters */
+  Py_ssize_t len;  /* usually iterates over the approximate median string */
   lev_byte *symlist;  /* list of symbols present in the strings,
                               we iterate over it insead of set of all
                               existing symbols */
-  size_t symlistlen;  /* length of symlist */
-  size_t maxlen;  /* maximum input string length */
-  size_t stoplen;  /* maximum tried median string length -- this is slightly
+  Py_ssize_t symlistlen;  /* length of symlist */
+  Py_ssize_t maxlen;  /* maximum input string length */
+  Py_ssize_t stoplen;  /* maximum tried median string length -- this is slightly
                       higher than maxlen, because the median string may be
                       longer than any of the input strings */
-  size_t **rows;  /* Levenshtein matrix rows for each string, we need to keep
+  Py_ssize_t **rows;  /* Levenshtein matrix rows for each string, we need to keep
                      only one previous row to construct the current one */
-  size_t *row;  /* a scratch buffer for new Levenshtein matrix row computation,
+  Py_ssize_t *row;  /* a scratch buffer for new Levenshtein matrix row computation,
                    shared among all strings */
   lev_byte *median;  /* the resulting approximate median string */
   double *mediandist;  /* the total distance of the best median string of
                           given length.  warning!  mediandist[0] is total
                           distance for empty string, while median[] itself
                           is normally zero-based */
-  size_t bestlen;  /* the best approximate median string length */
+  Py_ssize_t bestlen;  /* the best approximate median string length */
 
   /* find all symbols */
   symlist = make_symlist(n, lengths, strings, &symlistlen);
@@ -2892,18 +2964,18 @@ lev_greedy_median(size_t n, const size_t *lengths,
   }
 
   /* allocate and initialize per-string matrix rows and a common work buffer */
-  rows = (size_t**)malloc(n*sizeof(size_t*));
+  rows = (Py_ssize_t**)malloc(n*sizeof(Py_ssize_t*));
   if (!rows) {
     free(symlist);
     return NULL;
   }
   maxlen = 0;
   for (i = 0; i < n; i++) {
-    size_t *ri;
-    size_t leni = lengths[i];
+    Py_ssize_t *ri;
+    Py_ssize_t leni = lengths[i];
     if (leni > maxlen)
       maxlen = leni;
-    ri = rows[i] = (size_t*)malloc((leni + 1)*sizeof(size_t));
+    ri = rows[i] = (Py_ssize_t*)malloc((leni + 1)*sizeof(Py_ssize_t));
     if (!ri) {
       for (j = 0; j < i; j++)
         free(rows[j]);
@@ -2915,7 +2987,7 @@ lev_greedy_median(size_t n, const size_t *lengths,
       ri[j] = j;
   }
   stoplen = 2*maxlen + 1;
-  row = (size_t*)malloc((stoplen + 1)*sizeof(size_t));
+  row = (Py_ssize_t*)malloc((stoplen + 1)*sizeof(Py_ssize_t));
   if (!row) {
     for (j = 0; j < n; j++)
       free(rows[j]);
@@ -2963,15 +3035,15 @@ lev_greedy_median(size_t n, const size_t *lengths,
       /* sum Levenshtein distances from all the strings, with given weights */
       for (i = 0; i < n; i++) {
         const lev_byte *stri = strings[i];
-        size_t *p = rows[i];
-        size_t leni = lengths[i];
-        size_t *end = rows[i] + leni;
-        size_t min = len;
-        size_t x = len; /* == row[0] */
+        Py_ssize_t *p = rows[i];
+        Py_ssize_t leni = lengths[i];
+        Py_ssize_t *end = rows[i] + leni;
+        Py_ssize_t min = len;
+        Py_ssize_t x = len; /* == row[0] */
         /* compute how another row of Levenshtein matrix would look for median
          * string with this symbol added */
         while (p < end) {
-          size_t D = *(p++) + (symbol != *(stri++));
+          Py_ssize_t D = *(p++) + (symbol != *(stri++));
           x++;
           if (x > D)
             x = D;
@@ -3003,19 +3075,19 @@ lev_greedy_median(size_t n, const size_t *lengths,
     symbol = median[len - 1];
     for (i = 0; i < n; i++) {
       const lev_byte *stri = strings[i];
-      size_t *oldrow = rows[i];
-      size_t leni = lengths[i];
-      size_t k;
+      Py_ssize_t *oldrow = rows[i];
+      Py_ssize_t leni = lengths[i];
+      Py_ssize_t k;
       /* compute a row of Levenshtein matrix */
       for (k = 1; k <= leni; k++) {
-        size_t c1 = oldrow[k] + 1;
-        size_t c2 = row[k - 1] + 1;
-        size_t c3 = oldrow[k - 1] + (symbol != stri[k - 1]);
+        Py_ssize_t c1 = oldrow[k] + 1;
+        Py_ssize_t c2 = row[k - 1] + 1;
+        Py_ssize_t c3 = oldrow[k - 1] + (symbol != stri[k - 1]);
         row[k] = c2 > c3 ? c3 : c2;
         if (row[k] > c1)
           row[k] = c1;
       }
-      memcpy(oldrow, row, (leni + 1)*sizeof(size_t));
+      memcpy(oldrow, row, (leni + 1)*sizeof(Py_ssize_t));
     }
   }
 
@@ -3055,15 +3127,15 @@ lev_greedy_median(size_t n, const size_t *lengths,
  * string1, len1 are already shortened.
  */
 static double
-finish_distance_computations(size_t len1, lev_byte *string1,
-                             size_t n, const size_t *lengths,
+finish_distance_computations(Py_ssize_t len1, lev_byte *string1,
+                             Py_ssize_t n, const Py_ssize_t *lengths,
                              const lev_byte **strings,
-                             const double *weights, size_t **rows,
-                             size_t *row)
+                             const double *weights, Py_ssize_t **rows,
+                             Py_ssize_t *row)
 {
-  size_t *end;
-  size_t i, j;
-  size_t offset;  /* row[0]; offset + len1 give together real len of string1 */
+  Py_ssize_t *end;
+  Py_ssize_t i, j;
+  Py_ssize_t offset;  /* row[0]; offset + len1 give together real len of string1 */
   double distsum = 0.0;  /* sum of distances */
 
   /* catch trivia case */
@@ -3075,9 +3147,9 @@ finish_distance_computations(size_t len1, lev_byte *string1,
 
   /* iterate through the strings and sum the distances */
   for (j = 0; j < n; j++) {
-    size_t *rowi = rows[j];  /* current row */
-    size_t leni = lengths[j];  /* current length */
-    size_t len = len1;  /* temporary len1 for suffix stripping */
+    Py_ssize_t *rowi = rows[j];  /* current row */
+    Py_ssize_t leni = lengths[j];  /* current length */
+    Py_ssize_t len = len1;  /* temporary len1 for suffix stripping */
     const lev_byte *stringi = strings[j];  /* current string */
 
     /* strip common suffix (prefix CAN'T be stripped) */
@@ -3098,18 +3170,18 @@ finish_distance_computations(size_t len1, lev_byte *string1,
     }
 
     /* complete the matrix */
-    memcpy(row, rowi, (leni + 1)*sizeof(size_t));
+    memcpy(row, rowi, (leni + 1)*sizeof(Py_ssize_t));
     end = row + leni;
 
     for (i = 1; i <= len; i++) {
-      size_t *p = row + 1;
+      Py_ssize_t *p = row + 1;
       const lev_byte char1 = string1[i - 1];
       const lev_byte *char2p = stringi;
-      size_t D, x;
+      Py_ssize_t D, x;
 
       D = x = i + offset;
       while (p <= end) {
-        size_t c3 = --D + (char1 != *(char2p++));
+        Py_ssize_t c3 = --D + (char1 != *(char2p++));
         x++;
         if (x > c3)
           x = c3;
@@ -3147,30 +3219,30 @@ finish_distance_computations(size_t len1, lev_byte *string1,
  *          length is stored in @medlength.
  **/
 _LEV_STATIC_PY lev_byte*
-lev_median_improve(size_t len, const lev_byte *s,
-                   size_t n, const size_t *lengths,
+lev_median_improve(Py_ssize_t len, const lev_byte *s,
+                   Py_ssize_t n, const Py_ssize_t *lengths,
                    const lev_byte *strings[],
                    const double *weights,
-                   size_t *medlength)
+                   Py_ssize_t *medlength)
 {
-  size_t i;  /* usually iterates over strings (n) */
-  size_t j;  /* usually iterates over characters */
-  size_t pos;  /* the position in the approximate median string we are
+  Py_ssize_t i;  /* usually iterates over strings (n) */
+  Py_ssize_t j;  /* usually iterates over characters */
+  Py_ssize_t pos;  /* the position in the approximate median string we are
                   trying to change */
   lev_byte *symlist;  /* list of symbols present in the strings,
                               we iterate over it insead of set of all
                               existing symbols */
-  size_t symlistlen;  /* length of symlist */
-  size_t maxlen;  /* maximum input string length */
-  size_t stoplen;  /* maximum tried median string length -- this is slightly
+  Py_ssize_t symlistlen;  /* length of symlist */
+  Py_ssize_t maxlen;  /* maximum input string length */
+  Py_ssize_t stoplen;  /* maximum tried median string length -- this is slightly
                       higher than maxlen, because the median string may be
                       longer than any of the input strings */
-  size_t **rows;  /* Levenshtein matrix rows for each string, we need to keep
+  Py_ssize_t **rows;  /* Levenshtein matrix rows for each string, we need to keep
                      only one previous row to construct the current one */
-  size_t *row;  /* a scratch buffer for new Levenshtein matrix row computation,
+  Py_ssize_t *row;  /* a scratch buffer for new Levenshtein matrix row computation,
                    shared among all strings */
   lev_byte *median;  /* the resulting approximate median string */
-  size_t medlen;  /* the current approximate median string length */
+  Py_ssize_t medlen;  /* the current approximate median string length */
   double minminsum;  /* the current total distance sum */
 
   /* find all symbols */
@@ -3184,18 +3256,18 @@ lev_median_improve(size_t len, const lev_byte *s,
   }
 
   /* allocate and initialize per-string matrix rows and a common work buffer */
-  rows = (size_t**)malloc(n*sizeof(size_t*));
+  rows = (Py_ssize_t**)malloc(n*sizeof(Py_ssize_t*));
   if (!rows) {
     free(symlist);
     return NULL;
   }
   maxlen = 0;
   for (i = 0; i < n; i++) {
-    size_t *ri;
-    size_t leni = lengths[i];
+    Py_ssize_t *ri;
+    Py_ssize_t leni = lengths[i];
     if (leni > maxlen)
       maxlen = leni;
-    ri = rows[i] = (size_t*)malloc((leni + 1)*sizeof(size_t));
+    ri = rows[i] = (Py_ssize_t*)malloc((leni + 1)*sizeof(Py_ssize_t));
     if (!ri) {
       for (j = 0; j < i; j++)
         free(rows[j]);
@@ -3207,7 +3279,7 @@ lev_median_improve(size_t len, const lev_byte *s,
       ri[j] = j;
   }
   stoplen = 2*maxlen + 1;
-  row = (size_t*)malloc((stoplen + 2)*sizeof(size_t));
+  row = (Py_ssize_t*)malloc((stoplen + 2)*sizeof(Py_ssize_t));
   if (!row) {
     for (j = 0; j < n; j++)
       free(rows[j]);
@@ -3316,19 +3388,19 @@ lev_median_improve(size_t len, const lev_byte *s,
       row[0] = pos + 1;
       for (i = 0; i < n; i++) {
         const lev_byte *stri = strings[i];
-        size_t *oldrow = rows[i];
-        size_t leni = lengths[i];
-        size_t k;
+        Py_ssize_t *oldrow = rows[i];
+        Py_ssize_t leni = lengths[i];
+        Py_ssize_t k;
         /* compute a row of Levenshtein matrix */
         for (k = 1; k <= leni; k++) {
-          size_t c1 = oldrow[k] + 1;
-          size_t c2 = row[k - 1] + 1;
-          size_t c3 = oldrow[k - 1] + (symbol != stri[k - 1]);
+          Py_ssize_t c1 = oldrow[k] + 1;
+          Py_ssize_t c2 = row[k - 1] + 1;
+          Py_ssize_t c3 = oldrow[k - 1] + (symbol != stri[k - 1]);
           row[k] = c2 > c3 ? c3 : c2;
           if (row[k] > c1)
             row[k] = c1;
         }
-        memcpy(oldrow, row, (leni + 1)*sizeof(size_t));
+        memcpy(oldrow, row, (leni + 1)*sizeof(Py_ssize_t));
       }
       pos++;
     }
@@ -3368,7 +3440,7 @@ struct _HItem {
 static void
 free_usymlist_hash(HItem *symmap)
 {
-  size_t j;
+  Py_ssize_t j;
 
   for (j = 0; j < 0x100; j++) {
     HItem *p = symmap + j;
@@ -3388,11 +3460,11 @@ free_usymlist_hash(HItem *symmap)
  * in any of them (symset).  meanwhile, count how many different symbols
  * there are (used below for symlist). */
 static lev_wchar*
-make_usymlist(size_t n, const size_t *lengths,
-              const lev_wchar *strings[], size_t *symlistlen)
+make_usymlist(Py_ssize_t n, const Py_ssize_t *lengths,
+              const lev_wchar *strings[], Py_ssize_t *symlistlen)
 {
   lev_wchar *symlist;
-  size_t i, j;
+  Py_ssize_t i, j;
   HItem *symmap;
 
   j = 0;
@@ -3406,7 +3478,7 @@ make_usymlist(size_t n, const size_t *lengths,
   /* find all symbols, use a kind of hash for storage */
   symmap = (HItem*)malloc(0x100*sizeof(HItem));
   if (!symmap) {
-    *symlistlen = (size_t)(-1);
+    *symlistlen = -1;
     return NULL;
   }
   /* this is an ugly memory allocation avoiding hack: most hash elements
@@ -3434,7 +3506,7 @@ make_usymlist(size_t n, const size_t *lengths,
         p->n = (HItem*)malloc(sizeof(HItem));
         if (!p->n) {
           free_usymlist_hash(symmap);
-          *symlistlen = (size_t)(-1);
+          *symlistlen = -1;
           return NULL;
         }
         p = p->n;
@@ -3447,11 +3519,11 @@ make_usymlist(size_t n, const size_t *lengths,
   /* create dense symbol table, so we can easily iterate over only characters
    * present in the strings */
   {
-    size_t pos = 0;
+    Py_ssize_t pos = 0;
     symlist = (lev_wchar*)malloc((*symlistlen)*sizeof(lev_wchar));
     if (!symlist) {
       free_usymlist_hash(symmap);
-      *symlistlen = (size_t)(-1);
+      *symlistlen = -1;
       return NULL;
     }
     for (j = 0; j < 0x100; j++) {
@@ -3487,32 +3559,32 @@ make_usymlist(size_t n, const size_t *lengths,
  *          is stored in @medlength.
  **/
 _LEV_STATIC_PY lev_wchar*
-lev_u_greedy_median(size_t n, const size_t *lengths,
+lev_u_greedy_median(Py_ssize_t n, const Py_ssize_t *lengths,
                     const lev_wchar *strings[],
                     const double *weights,
-                    size_t *medlength)
+                    Py_ssize_t *medlength)
 {
-  size_t i;  /* usually iterates over strings (n) */
-  size_t j;  /* usually iterates over characters */
-  size_t len;  /* usually iterates over the approximate median string */
+  Py_ssize_t i;  /* usually iterates over strings (n) */
+  Py_ssize_t j;  /* usually iterates over characters */
+  Py_ssize_t len;  /* usually iterates over the approximate median string */
   lev_wchar *symlist;  /* list of symbols present in the strings,
                               we iterate over it insead of set of all
                               existing symbols */
-  size_t symlistlen;  /* length of symlistle */
-  size_t maxlen;  /* maximum input string length */
-  size_t stoplen;  /* maximum tried median string length -- this is slightly
+  Py_ssize_t symlistlen;  /* length of symlistle */
+  Py_ssize_t maxlen;  /* maximum input string length */
+  Py_ssize_t stoplen;  /* maximum tried median string length -- this is slightly
                       higher than maxlen, because the median string may be
                       longer than any of the input strings */
-  size_t **rows;  /* Levenshtein matrix rows for each string, we need to keep
+  Py_ssize_t **rows;  /* Levenshtein matrix rows for each string, we need to keep
                      only one previous row to construct the current one */
-  size_t *row;  /* a scratch buffer for new Levenshtein matrix row computation,
+  Py_ssize_t *row;  /* a scratch buffer for new Levenshtein matrix row computation,
                    shared among all strings */
   lev_wchar *median;  /* the resulting approximate median string */
   double *mediandist;  /* the total distance of the best median string of
                           given length.  warning!  mediandist[0] is total
                           distance for empty string, while median[] itself
                           is normally zero-based */
-  size_t bestlen;  /* the best approximate median string length */
+  Py_ssize_t bestlen;  /* the best approximate median string length */
 
   /* find all symbols */
   symlist = make_usymlist(n, lengths, strings, &symlistlen);
@@ -3525,18 +3597,18 @@ lev_u_greedy_median(size_t n, const size_t *lengths,
   }
 
   /* allocate and initialize per-string matrix rows and a common work buffer */
-  rows = (size_t**)malloc(n*sizeof(size_t*));
+  rows = (Py_ssize_t**)malloc(n*sizeof(Py_ssize_t*));
   if (!rows) {
     free(symlist);
     return NULL;
   }
   maxlen = 0;
   for (i = 0; i < n; i++) {
-    size_t *ri;
-    size_t leni = lengths[i];
+    Py_ssize_t *ri;
+    Py_ssize_t leni = lengths[i];
     if (leni > maxlen)
       maxlen = leni;
-    ri = rows[i] = (size_t*)malloc((leni + 1)*sizeof(size_t));
+    ri = rows[i] = (Py_ssize_t*)malloc((leni + 1)*sizeof(Py_ssize_t));
     if (!ri) {
       for (j = 0; j < i; j++)
         free(rows[j]);
@@ -3548,7 +3620,7 @@ lev_u_greedy_median(size_t n, const size_t *lengths,
       ri[j] = j;
   }
   stoplen = 2*maxlen + 1;
-  row = (size_t*)malloc((stoplen + 1)*sizeof(size_t));
+  row = (Py_ssize_t*)malloc((stoplen + 1)*sizeof(Py_ssize_t));
   if (!row) {
     for (j = 0; j < n; j++)
       free(rows[j]);
@@ -3596,15 +3668,15 @@ lev_u_greedy_median(size_t n, const size_t *lengths,
       /* sum Levenshtein distances from all the strings, with given weights */
       for (i = 0; i < n; i++) {
         const lev_wchar *stri = strings[i];
-        size_t *p = rows[i];
-        size_t leni = lengths[i];
-        size_t *end = rows[i] + leni;
-        size_t min = len;
-        size_t x = len; /* == row[0] */
+        Py_ssize_t *p = rows[i];
+        Py_ssize_t leni = lengths[i];
+        Py_ssize_t *end = rows[i] + leni;
+        Py_ssize_t min = len;
+        Py_ssize_t x = len; /* == row[0] */
         /* compute how another row of Levenshtein matrix would look for median
          * string with this symbol added */
         while (p < end) {
-          size_t D = *(p++) + (symbol != *(stri++));
+          Py_ssize_t D = *(p++) + (symbol != *(stri++));
           x++;
           if (x > D)
             x = D;
@@ -3636,19 +3708,19 @@ lev_u_greedy_median(size_t n, const size_t *lengths,
     symbol = median[len - 1];
     for (i = 0; i < n; i++) {
       const lev_wchar *stri = strings[i];
-      size_t *oldrow = rows[i];
-      size_t leni = lengths[i];
-      size_t k;
+      Py_ssize_t *oldrow = rows[i];
+      Py_ssize_t leni = lengths[i];
+      Py_ssize_t k;
       /* compute a row of Levenshtein matrix */
       for (k = 1; k <= leni; k++) {
-        size_t c1 = oldrow[k] + 1;
-        size_t c2 = row[k - 1] + 1;
-        size_t c3 = oldrow[k - 1] + (symbol != stri[k - 1]);
+        Py_ssize_t c1 = oldrow[k] + 1;
+        Py_ssize_t c2 = row[k - 1] + 1;
+        Py_ssize_t c3 = oldrow[k - 1] + (symbol != stri[k - 1]);
         row[k] = c2 > c3 ? c3 : c2;
         if (row[k] > c1)
           row[k] = c1;
       }
-      memcpy(oldrow, row, (leni + 1)*sizeof(size_t));
+      memcpy(oldrow, row, (leni + 1)*sizeof(Py_ssize_t));
     }
   }
 
@@ -3688,15 +3760,15 @@ lev_u_greedy_median(size_t n, const size_t *lengths,
  * string1, len1 are already shortened.
  */
 static double
-finish_udistance_computations(size_t len1, lev_wchar *string1,
-                             size_t n, const size_t *lengths,
+finish_udistance_computations(Py_ssize_t len1, lev_wchar *string1,
+                             Py_ssize_t n, const Py_ssize_t *lengths,
                              const lev_wchar **strings,
-                             const double *weights, size_t **rows,
-                             size_t *row)
+                             const double *weights, Py_ssize_t **rows,
+                             Py_ssize_t *row)
 {
-  size_t *end;
-  size_t i, j;
-  size_t offset;  /* row[0]; offset + len1 give together real len of string1 */
+  Py_ssize_t *end;
+  Py_ssize_t i, j;
+  Py_ssize_t offset;  /* row[0]; offset + len1 give together real len of string1 */
   double distsum = 0.0;  /* sum of distances */
 
   /* catch trivia case */
@@ -3708,9 +3780,9 @@ finish_udistance_computations(size_t len1, lev_wchar *string1,
 
   /* iterate through the strings and sum the distances */
   for (j = 0; j < n; j++) {
-    size_t *rowi = rows[j];  /* current row */
-    size_t leni = lengths[j];  /* current length */
-    size_t len = len1;  /* temporary len1 for suffix stripping */
+    Py_ssize_t *rowi = rows[j];  /* current row */
+    Py_ssize_t leni = lengths[j];  /* current length */
+    Py_ssize_t len = len1;  /* temporary len1 for suffix stripping */
     const lev_wchar *stringi = strings[j];  /* current string */
 
     /* strip common suffix (prefix CAN'T be stripped) */
@@ -3731,18 +3803,18 @@ finish_udistance_computations(size_t len1, lev_wchar *string1,
     }
 
     /* complete the matrix */
-    memcpy(row, rowi, (leni + 1)*sizeof(size_t));
+    memcpy(row, rowi, (leni + 1)*sizeof(Py_ssize_t));
     end = row + leni;
 
     for (i = 1; i <= len; i++) {
-      size_t *p = row + 1;
+      Py_ssize_t *p = row + 1;
       const lev_wchar char1 = string1[i - 1];
       const lev_wchar *char2p = stringi;
-      size_t D, x;
+      Py_ssize_t D, x;
 
       D = x = i + offset;
       while (p <= end) {
-        size_t c3 = --D + (char1 != *(char2p++));
+        Py_ssize_t c3 = --D + (char1 != *(char2p++));
         x++;
         if (x > c3)
           x = c3;
@@ -3780,30 +3852,30 @@ finish_udistance_computations(size_t len1, lev_wchar *string1,
  *          length is stored in @medlength.
  **/
 _LEV_STATIC_PY lev_wchar*
-lev_u_median_improve(size_t len, const lev_wchar *s,
-                     size_t n, const size_t *lengths,
+lev_u_median_improve(Py_ssize_t len, const lev_wchar *s,
+                     Py_ssize_t n, const Py_ssize_t *lengths,
                      const lev_wchar *strings[],
                      const double *weights,
-                     size_t *medlength)
+                     Py_ssize_t *medlength)
 {
-  size_t i;  /* usually iterates over strings (n) */
-  size_t j;  /* usually iterates over characters */
-  size_t pos;  /* the position in the approximate median string we are
+  Py_ssize_t i;  /* usually iterates over strings (n) */
+  Py_ssize_t j;  /* usually iterates over characters */
+  Py_ssize_t pos;  /* the position in the approximate median string we are
                   trying to change */
   lev_wchar *symlist;  /* list of symbols present in the strings,
                               we iterate over it insead of set of all
                               existing symbols */
-  size_t symlistlen;  /* length of symlist */
-  size_t maxlen;  /* maximum input string length */
-  size_t stoplen;  /* maximum tried median string length -- this is slightly
+  Py_ssize_t symlistlen;  /* length of symlist */
+  Py_ssize_t maxlen;  /* maximum input string length */
+  Py_ssize_t stoplen;  /* maximum tried median string length -- this is slightly
                       higher than maxlen, because the median string may be
                       longer than any of the input strings */
-  size_t **rows;  /* Levenshtein matrix rows for each string, we need to keep
+  Py_ssize_t **rows;  /* Levenshtein matrix rows for each string, we need to keep
                      only one previous row to construct the current one */
-  size_t *row;  /* a scratch buffer for new Levenshtein matrix row computation,
+  Py_ssize_t *row;  /* a scratch buffer for new Levenshtein matrix row computation,
                    shared among all strings */
   lev_wchar *median;  /* the resulting approximate median string */
-  size_t medlen;  /* the current approximate median string length */
+  Py_ssize_t medlen;  /* the current approximate median string length */
   double minminsum;  /* the current total distance sum */
 
   /* find all symbols */
@@ -3817,18 +3889,18 @@ lev_u_median_improve(size_t len, const lev_wchar *s,
   }
 
   /* allocate and initialize per-string matrix rows and a common work buffer */
-  rows = (size_t**)malloc(n*sizeof(size_t*));
+  rows = (Py_ssize_t**)malloc(n*sizeof(Py_ssize_t*));
   if (!rows) {
     free(symlist);
     return NULL;
   }
   maxlen = 0;
   for (i = 0; i < n; i++) {
-    size_t *ri;
-    size_t leni = lengths[i];
+    Py_ssize_t *ri;
+    Py_ssize_t leni = lengths[i];
     if (leni > maxlen)
       maxlen = leni;
-    ri = rows[i] = (size_t*)malloc((leni + 1)*sizeof(size_t));
+    ri = rows[i] = (Py_ssize_t*)malloc((leni + 1)*sizeof(Py_ssize_t));
     if (!ri) {
       for (j = 0; j < i; j++)
         free(rows[j]);
@@ -3840,7 +3912,7 @@ lev_u_median_improve(size_t len, const lev_wchar *s,
       ri[j] = j;
   }
   stoplen = 2*maxlen + 1;
-  row = (size_t*)malloc((stoplen + 2)*sizeof(size_t));
+  row = (Py_ssize_t*)malloc((stoplen + 2)*sizeof(Py_ssize_t));
   if (!row) {
     for (j = 0; j < n; j++)
       free(rows[j]);
@@ -3949,19 +4021,19 @@ lev_u_median_improve(size_t len, const lev_wchar *s,
       row[0] = pos + 1;
       for (i = 0; i < n; i++) {
         const lev_wchar *stri = strings[i];
-        size_t *oldrow = rows[i];
-        size_t leni = lengths[i];
-        size_t k;
+        Py_ssize_t *oldrow = rows[i];
+        Py_ssize_t leni = lengths[i];
+        Py_ssize_t k;
         /* compute a row of Levenshtein matrix */
         for (k = 1; k <= leni; k++) {
-          size_t c1 = oldrow[k] + 1;
-          size_t c2 = row[k - 1] + 1;
-          size_t c3 = oldrow[k - 1] + (symbol != stri[k - 1]);
+          Py_ssize_t c1 = oldrow[k] + 1;
+          Py_ssize_t c2 = row[k - 1] + 1;
+          Py_ssize_t c3 = oldrow[k - 1] + (symbol != stri[k - 1]);
           row[k] = c2 > c3 ? c3 : c2;
           if (row[k] > c1)
             row[k] = c1;
         }
-        memcpy(oldrow, row, (leni + 1)*sizeof(size_t));
+        memcpy(oldrow, row, (leni + 1)*sizeof(Py_ssize_t));
       }
       pos++;
     }
@@ -4003,15 +4075,15 @@ lev_u_median_improve(size_t len, const lev_wchar *s,
  * the symset is passed as an argument to avoid its allocation and
  * deallocation when it's used in the caller too */
 static lev_byte*
-make_symlistset(size_t n, const size_t *lengths,
-                const lev_byte *strings[], size_t *symlistlen,
+make_symlistset(Py_ssize_t n, const Py_ssize_t *lengths,
+                const lev_byte *strings[], Py_ssize_t *symlistlen,
                 double *symset)
 {
-  size_t i, j;
+  Py_ssize_t i, j;
   lev_byte *symlist;
 
   if (!symset) {
-    *symlistlen = (size_t)(-1);
+    *symlistlen = -1;
     return NULL;
   }
   memset(symset, 0, 0x100*sizeof(double));  /* XXX: needs IEEE doubles?! */
@@ -4032,10 +4104,10 @@ make_symlistset(size_t n, const size_t *lengths,
   /* create dense symbol table, so we can easily iterate over only characters
    * present in the strings */
   {
-    size_t pos = 0;
+    Py_ssize_t pos = 0;
     symlist = (lev_byte*)malloc((*symlistlen)*sizeof(lev_byte));
     if (!symlist) {
-      *symlistlen = (size_t)(-1);
+      *symlistlen = -1;
       return NULL;
     }
     for (j = 0; j < 0x100; j++) {
@@ -4048,13 +4120,13 @@ make_symlistset(size_t n, const size_t *lengths,
 }
 
 _LEV_STATIC_PY lev_byte*
-lev_quick_median(size_t n,
-                 const size_t *lengths,
+lev_quick_median(Py_ssize_t n,
+                 const Py_ssize_t *lengths,
                  const lev_byte *strings[],
                  const double *weights,
-                 size_t *medlength)
+                 Py_ssize_t *medlength)
 {
-  size_t symlistlen, len, i, j, k;
+  Py_ssize_t symlistlen, len, i, j, k;
   lev_byte *symlist;
   lev_byte *median;  /* the resulting string */
   double *symset;
@@ -4095,7 +4167,7 @@ lev_quick_median(size_t n,
     /* clear the symbol probabilities */
     if (symlistlen < 32) {
       for (i = 0; i < symlistlen; i++)
-        symset[symlist[i]] = 0.0;
+        symset[(unsigned char)symlist[i]] = 0.0;
     }
     else
       memset(symset, 0, 0x100*sizeof(double));
@@ -4104,26 +4176,26 @@ lev_quick_median(size_t n,
     for (i = 0; i < n; i++) {
       const lev_byte *stri = strings[i];
       double weighti = weights[i];
-      size_t lengthi = lengths[i];
+      Py_ssize_t lengthi = lengths[i];
       double start = lengthi/ml*j;
       double end = start + lengthi/ml;
-      size_t istart = floor(start);
-      size_t iend = ceil(end);
+      Py_ssize_t istart = floor(start);
+      Py_ssize_t iend = ceil(end);
 
       /* rounding errors can overflow the buffer */
       if (iend > lengthi)
         iend = lengthi;
 
       for (k = istart+1; k < iend; k++)
-        symset[stri[k]] += weighti;
-      symset[stri[istart]] += weighti*(1+istart - start);
-      symset[stri[iend-1]] -= weighti*(iend - end);
+        symset[(unsigned char)stri[k]] += weighti;
+      symset[(unsigned char)stri[istart]] += weighti*(1+istart - start);
+      symset[(unsigned char)stri[iend-1]] -= weighti*(iend - end);
     }
 
     /* find the elected symbol */
     k = symlist[0];
     for (i = 1; i < symlistlen; i++) {
-      if (symset[symlist[i]] > symset[k])
+      if (symset[(unsigned char)symlist[i]] > symset[k])
         k = symlist[i];
     }
     median[j] = k;
@@ -4148,7 +4220,7 @@ struct _HQItem {
 static void
 free_usymlistset_hash(HQItem *symmap)
 {
-  size_t j;
+  Py_ssize_t j;
 
   for (j = 0; j < 0x100; j++) {
     HQItem *p = symmap + j;
@@ -4170,12 +4242,12 @@ free_usymlistset_hash(HQItem *symmap)
  * the symset is passed as an argument to avoid its allocation and
  * deallocation when it's used in the caller too */
 static lev_wchar*
-make_usymlistset(size_t n, const size_t *lengths,
-                 const lev_wchar *strings[], size_t *symlistlen,
+make_usymlistset(Py_ssize_t n, const Py_ssize_t *lengths,
+                 const lev_wchar *strings[], Py_ssize_t *symlistlen,
                  HQItem *symmap)
 {
   lev_wchar *symlist;
-  size_t i, j;
+  Py_ssize_t i, j;
 
   j = 0;
   for (i = 0; i < n; i++)
@@ -4209,7 +4281,7 @@ make_usymlistset(size_t n, const size_t *lengths,
       if (p->c != c) {
         p->n = (HQItem*)malloc(sizeof(HQItem));
         if (!p->n) {
-          *symlistlen = (size_t)(-1);
+          *symlistlen = -1;
           return NULL;
         }
         p = p->n;
@@ -4222,10 +4294,10 @@ make_usymlistset(size_t n, const size_t *lengths,
   /* create dense symbol table, so we can easily iterate over only characters
    * present in the strings */
   {
-    size_t pos = 0;
+    Py_ssize_t pos = 0;
     symlist = (lev_wchar*)malloc((*symlistlen)*sizeof(lev_wchar));
     if (!symlist) {
-      *symlistlen = (size_t)(-1);
+      *symlistlen = -1;
       return NULL;
     }
     for (j = 0; j < 0x100; j++) {
@@ -4241,13 +4313,13 @@ make_usymlistset(size_t n, const size_t *lengths,
 }
 
 _LEV_STATIC_PY lev_wchar*
-lev_u_quick_median(size_t n,
-                   const size_t *lengths,
+lev_u_quick_median(Py_ssize_t n,
+                   const Py_ssize_t *lengths,
                    const lev_wchar *strings[],
                    const double *weights,
-                   size_t *medlength)
+                   Py_ssize_t *medlength)
 {
-  size_t symlistlen, len, i, j, k;
+  Py_ssize_t symlistlen, len, i, j, k;
   lev_wchar *symlist;
   lev_wchar *median;  /* the resulting string */
   HQItem *symmap;
@@ -4300,11 +4372,11 @@ lev_u_quick_median(size_t n,
     for (i = 0; i < n; i++) {
       const lev_wchar *stri = strings[i];
       double weighti = weights[i];
-      size_t lengthi = lengths[i];
+      Py_ssize_t lengthi = lengths[i];
       double start = lengthi/ml*j;
       double end = start + lengthi/ml;
-      size_t istart = floor(start);
-      size_t iend = ceil(end);
+      Py_ssize_t istart = floor(start);
+      Py_ssize_t iend = ceil(end);
 
       /* rounding errors can overflow the buffer */
       if (iend > lengthi)
@@ -4387,29 +4459,29 @@ lev_u_quick_median(size_t n,
  * Returns: An index in @strings pointing to the set median, -1 in case of
  *          failure.
  **/
-_LEV_STATIC_PY size_t
-lev_set_median_index(size_t n, const size_t *lengths,
+_LEV_STATIC_PY Py_ssize_t
+lev_set_median_index(Py_ssize_t n, const Py_ssize_t *lengths,
                      const lev_byte *strings[],
                      const double *weights)
 {
-  size_t minidx = 0;
+  Py_ssize_t minidx = 0;
   double mindist = LEV_INFINITY;
-  size_t i;
+  Py_ssize_t i;
   long int *distances;
 
   distances = (long int*)malloc((n*(n - 1)/2)*sizeof(long int));
   if (!distances)
-    return (size_t)-1;
+    return (Py_ssize_t)-1;
 
   memset(distances, 0xff, (n*(n - 1)/2)*sizeof(long int)); /* XXX */
   for (i = 0; i < n; i++) {
-    size_t j = 0;
+    Py_ssize_t j = 0;
     double dist = 0.0;
     const lev_byte *stri = strings[i];
-    size_t leni = lengths[i];
+    Py_ssize_t leni = lengths[i];
     /* below diagonal */
     while (j < i && dist < mindist) {
-      size_t dindex = (i - 1)*(i - 2)/2 + j;
+      Py_ssize_t dindex = (i - 1)*(i - 2)/2 + j;
       long int d;
       if (distances[dindex] >= 0)
         d = distances[dindex];
@@ -4417,7 +4489,7 @@ lev_set_median_index(size_t n, const size_t *lengths,
         d = lev_edit_distance(lengths[j], strings[j], leni, stri, 0);
         if (d < 0) {
           free(distances);
-          return (size_t)-1;
+          return (Py_ssize_t)-1;
         }
       }
       dist += weights[j]*d;
@@ -4426,12 +4498,12 @@ lev_set_median_index(size_t n, const size_t *lengths,
     j++;  /* no need to compare item with itself */
     /* above diagonal */
     while (j < n && dist < mindist) {
-      size_t dindex = (j - 1)*(j - 2)/2 + i;
+      Py_ssize_t dindex = (j - 1)*(j - 2)/2 + i;
       distances[dindex] = lev_edit_distance(lengths[j], strings[j],
                                             leni, stri, 0);
       if (distances[dindex] < 0) {
         free(distances);
-        return (size_t)-1;
+        return (Py_ssize_t)-1;
       }
       dist += weights[j]*distances[dindex];
       j++;
@@ -4460,29 +4532,29 @@ lev_set_median_index(size_t n, const size_t *lengths,
  * Returns: An index in @strings pointing to the set median, -1 in case of
  *          failure.
  **/
-_LEV_STATIC_PY size_t
-lev_u_set_median_index(size_t n, const size_t *lengths,
+_LEV_STATIC_PY Py_ssize_t
+lev_u_set_median_index(Py_ssize_t n, const Py_ssize_t *lengths,
                        const lev_wchar *strings[],
                        const double *weights)
 {
-  size_t minidx = 0;
+  Py_ssize_t minidx = 0;
   double mindist = LEV_INFINITY;
-  size_t i;
+  Py_ssize_t i;
   long int *distances;
 
   distances = (long int*)malloc((n*(n - 1)/2)*sizeof(long int));
   if (!distances)
-    return (size_t)-1;
+    return (Py_ssize_t)-1;
 
   memset(distances, 0xff, (n*(n - 1)/2)*sizeof(long int)); /* XXX */
   for (i = 0; i < n; i++) {
-    size_t j = 0;
+    Py_ssize_t j = 0;
     double dist = 0.0;
     const lev_wchar *stri = strings[i];
-    size_t leni = lengths[i];
+    Py_ssize_t leni = lengths[i];
     /* below diagonal */
     while (j < i && dist < mindist) {
-      size_t dindex = (i - 1)*(i - 2)/2 + j;
+      Py_ssize_t dindex = (i - 1)*(i - 2)/2 + j;
       long int d;
       if (distances[dindex] >= 0)
         d = distances[dindex];
@@ -4490,7 +4562,7 @@ lev_u_set_median_index(size_t n, const size_t *lengths,
         d = lev_u_edit_distance(lengths[j], strings[j], leni, stri, 0);
         if (d < 0) {
           free(distances);
-          return (size_t)-1;
+          return (Py_ssize_t)-1;
         }
       }
       dist += weights[j]*d;
@@ -4499,12 +4571,12 @@ lev_u_set_median_index(size_t n, const size_t *lengths,
     j++;  /* no need to compare item with itself */
     /* above diagonal */
     while (j < n && dist < mindist) {
-      size_t dindex = (j - 1)*(j - 2)/2 + i;
+      Py_ssize_t dindex = (j - 1)*(j - 2)/2 + i;
       distances[dindex] = lev_u_edit_distance(lengths[j], strings[j],
                                               leni, stri, 0);
       if (distances[dindex] < 0) {
         free(distances);
-        return (size_t)-1;
+        return (Py_ssize_t)-1;
       }
       dist += weights[j]*distances[dindex];
       j++;
@@ -4535,15 +4607,15 @@ lev_u_set_median_index(size_t n, const size_t *lengths,
  *          in @medlength.  %NULL in the case of failure.
  **/
 _LEV_STATIC_PY lev_byte*
-lev_set_median(size_t n, const size_t *lengths,
+lev_set_median(Py_ssize_t n, const Py_ssize_t *lengths,
                const lev_byte *strings[],
                const double *weights,
-               size_t *medlength)
+               Py_ssize_t *medlength)
 {
-  size_t minidx = lev_set_median_index(n, lengths, strings, weights);
+  Py_ssize_t minidx = lev_set_median_index(n, lengths, strings, weights);
   lev_byte *result;
 
-  if (minidx == (size_t)-1)
+  if (minidx == (Py_ssize_t)-1)
     return NULL;
 
   *medlength = lengths[minidx];
@@ -4571,15 +4643,15 @@ lev_set_median(size_t n, const size_t *lengths,
  *          in @medlength.  %NULL in the case of failure.
  **/
 _LEV_STATIC_PY lev_wchar*
-lev_u_set_median(size_t n, const size_t *lengths,
+lev_u_set_median(Py_ssize_t n, const Py_ssize_t *lengths,
                  const lev_wchar *strings[],
                  const double *weights,
-                 size_t *medlength)
+                 Py_ssize_t *medlength)
 {
-  size_t minidx = lev_u_set_median_index(n, lengths, strings, weights);
+  Py_ssize_t minidx = lev_u_set_median_index(n, lengths, strings, weights);
   lev_wchar *result;
 
-  if (minidx == (size_t)-1)
+  if (minidx == (Py_ssize_t)-1)
     return NULL;
 
   *medlength = lengths[minidx];
@@ -4619,12 +4691,12 @@ lev_u_set_median(size_t n, const size_t *lengths,
  * Returns: The distance of the two sequences.
  **/
 _LEV_STATIC_PY double
-lev_edit_seq_distance(size_t n1, const size_t *lengths1,
+lev_edit_seq_distance(Py_ssize_t n1, const Py_ssize_t *lengths1,
                       const lev_byte *strings1[],
-                      size_t n2, const size_t *lengths2,
+                      Py_ssize_t n2, const Py_ssize_t *lengths2,
                       const lev_byte *strings2[])
 {
-  size_t i;
+  Py_ssize_t i;
   double *row;  /* we only need to keep one row of costs */
   double *end;
 
@@ -4658,8 +4730,8 @@ lev_edit_seq_distance(size_t n1, const size_t *lengths1,
 
   /* make the inner cycle (i.e. strings2) the longer one */
   if (n1 > n2) {
-    size_t nx = n1;
-    const size_t *lx = lengths1;
+    Py_ssize_t nx = n1;
+    const Py_ssize_t *lx = lengths1;
     const lev_byte **sx = strings1;
     n1 = n2;
     n2 = nx;
@@ -4685,19 +4757,19 @@ lev_edit_seq_distance(size_t n1, const size_t *lengths1,
   for (i = 1; i < n1; i++) {
     double *p = row + 1;
     const lev_byte *str1 = strings1[i - 1];
-    const size_t len1 = lengths1[i - 1];
+    const Py_ssize_t len1 = lengths1[i - 1];
     const lev_byte **str2p = strings2;
-    const size_t *len2p = lengths2;
+    const Py_ssize_t *len2p = lengths2;
     double D = i - 1.0;
     double x = i;
     while (p <= end) {
-      size_t l = len1 + *len2p;
+      Py_ssize_t l = len1 + *len2p;
       double q;
       if (l == 0)
         q = D;
       else {
-        size_t d = lev_edit_distance(len1, str1, *(len2p++), *(str2p++), 1);
-        if (d == (size_t)(-1)) {
+        Py_ssize_t d = lev_edit_distance(len1, str1, *(len2p++), *(str2p++), 1);
+        if (d == -1) {
           free(row);
           return -1.0;
         }
@@ -4739,12 +4811,12 @@ lev_edit_seq_distance(size_t n1, const size_t *lengths1,
  * Returns: The distance of the two sequences.
  **/
 _LEV_STATIC_PY double
-lev_u_edit_seq_distance(size_t n1, const size_t *lengths1,
+lev_u_edit_seq_distance(Py_ssize_t n1, const Py_ssize_t *lengths1,
                         const lev_wchar *strings1[],
-                        size_t n2, const size_t *lengths2,
+                        Py_ssize_t n2, const Py_ssize_t *lengths2,
                         const lev_wchar *strings2[])
 {
-  size_t i;
+  Py_ssize_t i;
   double *row;  /* we only need to keep one row of costs */
   double *end;
 
@@ -4778,8 +4850,8 @@ lev_u_edit_seq_distance(size_t n1, const size_t *lengths1,
 
   /* make the inner cycle (i.e. strings2) the longer one */
   if (n1 > n2) {
-    size_t nx = n1;
-    const size_t *lx = lengths1;
+    Py_ssize_t nx = n1;
+    const Py_ssize_t *lx = lengths1;
     const lev_wchar **sx = strings1;
     n1 = n2;
     n2 = nx;
@@ -4805,19 +4877,19 @@ lev_u_edit_seq_distance(size_t n1, const size_t *lengths1,
   for (i = 1; i < n1; i++) {
     double *p = row + 1;
     const lev_wchar *str1 = strings1[i - 1];
-    const size_t len1 = lengths1[i - 1];
+    const Py_ssize_t len1 = lengths1[i - 1];
     const lev_wchar **str2p = strings2;
-    const size_t *len2p = lengths2;
+    const Py_ssize_t *len2p = lengths2;
     double D = i - 1.0;
     double x = i;
     while (p <= end) {
-      size_t l = len1 + *len2p;
+      Py_ssize_t l = len1 + *len2p;
       double q;
       if (l == 0)
         q = D;
       else {
-        size_t d = lev_u_edit_distance(len1, str1, *(len2p++), *(str2p++), 1);
-        if (d == (size_t)(-1)) {
+        Py_ssize_t d = lev_u_edit_distance(len1, str1, *(len2p++), *(str2p++), 1);
+        if (d == -1) {
           free(row);
           return -1.0;
         }
@@ -4860,15 +4932,15 @@ lev_u_edit_seq_distance(size_t n1, const size_t *lengths1,
  * Returns: The distance of the two sets.
  **/
 _LEV_STATIC_PY double
-lev_set_distance(size_t n1, const size_t *lengths1,
+lev_set_distance(Py_ssize_t n1, const Py_ssize_t *lengths1,
                  const lev_byte *strings1[],
-                 size_t n2, const size_t *lengths2,
+                 Py_ssize_t n2, const Py_ssize_t *lengths2,
                  const lev_byte *strings2[])
 {
   double *dists;  /* the (modified) distance matrix, indexed [row*n1 + col] */
   double *r;
-  size_t i, j;
-  size_t *map;
+  Py_ssize_t i, j;
+  Py_ssize_t *map;
   double sum;
 
   /* catch trivial cases */
@@ -4879,8 +4951,8 @@ lev_set_distance(size_t n1, const size_t *lengths1,
 
   /* make the number of columns (n1) smaller than the number of rows */
   if (n1 > n2) {
-    size_t nx = n1;
-    const size_t *lx = lengths1;
+    Py_ssize_t nx = n1;
+    const Py_ssize_t *lx = lengths1;
     const lev_byte **sx = strings1;
     n1 = n2;
     n2 = nx;
@@ -4895,17 +4967,17 @@ lev_set_distance(size_t n1, const size_t *lengths1,
   if (!r)
     return -1.0;
   for (i = 0; i < n2; i++) {
-    size_t len2 = lengths2[i];
+    Py_ssize_t len2 = lengths2[i];
     const lev_byte *str2 = strings2[i];
-    const size_t *len1p = lengths1;
+    const Py_ssize_t *len1p = lengths1;
     const lev_byte **str1p = strings1;
     for (j = 0; j < n1; j++) {
-      size_t l = len2 + *len1p;
+      Py_ssize_t l = len2 + *len1p;
       if (l == 0)
         *(r++) = 0.0;
       else {
-        size_t d = lev_edit_distance(len2, str2, *(len1p++), *(str1p)++, 1);
-        if (d == (size_t)(-1)) {
+        Py_ssize_t d = lev_edit_distance(len2, str2, *(len1p++), *(str1p)++, 1);
+        if (d == -1) {
           free(r);
           return -1.0;
         }
@@ -4922,13 +4994,13 @@ lev_set_distance(size_t n1, const size_t *lengths1,
   /* sum the set distance */
   sum = n2 - n1;
   for (j = 0; j < n1; j++) {
-    size_t l;
+    Py_ssize_t l;
     i = map[j];
     l = lengths1[j] + lengths2[i];
     if (l > 0) {
-      size_t d = lev_edit_distance(lengths1[j], strings1[j],
+      Py_ssize_t d = lev_edit_distance(lengths1[j], strings1[j],
                                    lengths2[i], strings2[i], 1);
-      if (d == (size_t)(-1)) {
+      if (d == -1) {
         free(map);
         return -1.0;
       }
@@ -4960,15 +5032,15 @@ lev_set_distance(size_t n1, const size_t *lengths1,
  * Returns: The distance of the two sets.
  **/
 _LEV_STATIC_PY double
-lev_u_set_distance(size_t n1, const size_t *lengths1,
+lev_u_set_distance(Py_ssize_t n1, const Py_ssize_t *lengths1,
                    const lev_wchar *strings1[],
-                   size_t n2, const size_t *lengths2,
+                   Py_ssize_t n2, const Py_ssize_t *lengths2,
                    const lev_wchar *strings2[])
 {
   double *dists;  /* the (modified) distance matrix, indexed [row*n1 + col] */
   double *r;
-  size_t i, j;
-  size_t *map;
+  Py_ssize_t i, j;
+  Py_ssize_t *map;
   double sum;
 
   /* catch trivial cases */
@@ -4979,8 +5051,8 @@ lev_u_set_distance(size_t n1, const size_t *lengths1,
 
   /* make the number of columns (n1) smaller than the number of rows */
   if (n1 > n2) {
-    size_t nx = n1;
-    const size_t *lx = lengths1;
+    Py_ssize_t nx = n1;
+    const Py_ssize_t *lx = lengths1;
     const lev_wchar **sx = strings1;
     n1 = n2;
     n2 = nx;
@@ -4995,17 +5067,17 @@ lev_u_set_distance(size_t n1, const size_t *lengths1,
   if (!r)
     return -1.0;
   for (i = 0; i < n2; i++) {
-    size_t len2 = lengths2[i];
+    Py_ssize_t len2 = lengths2[i];
     const lev_wchar *str2 = strings2[i];
-    const size_t *len1p = lengths1;
+    const Py_ssize_t *len1p = lengths1;
     const lev_wchar **str1p = strings1;
     for (j = 0; j < n1; j++) {
-      size_t l = len2 + *len1p;
+      Py_ssize_t l = len2 + *len1p;
       if (l == 0)
         *(r++) = 0.0;
       else {
-        size_t d = lev_u_edit_distance(len2, str2, *(len1p++), *(str1p)++, 1);
-        if (d == (size_t)(-1)) {
+        Py_ssize_t d = lev_u_edit_distance(len2, str2, *(len1p++), *(str1p)++, 1);
+        if (d == -1) {
           free(r);
           return -1.0;
         }
@@ -5022,13 +5094,13 @@ lev_u_set_distance(size_t n1, const size_t *lengths1,
   /* sum the set distance */
   sum = n2 - n1;
   for (j = 0; j < n1; j++) {
-    size_t l;
+    Py_ssize_t l;
     i = map[j];
     l = lengths1[j] + lengths2[i];
     if (l > 0) {
-      size_t d = lev_u_edit_distance(lengths1[j], strings1[j],
+      Py_ssize_t d = lev_u_edit_distance(lengths1[j], strings1[j],
                                      lengths2[i], strings2[i], 1);
-      if (d == (size_t)(-1)) {
+      if (d == -1) {
         free(map);
         return -1.0;
       }
@@ -5043,40 +5115,40 @@ lev_u_set_distance(size_t n1, const size_t *lengths1,
 /*
  * Munkers-Blackman algorithm.
  */
-static size_t*
-munkers_blackman(size_t n1, size_t n2, double *dists)
+static Py_ssize_t*
+munkers_blackman(Py_ssize_t n1, Py_ssize_t n2, double *dists)
 {
-  size_t i, j;
-  size_t *covc, *covr;  /* 1 if column/row is covered */
+  Py_ssize_t i, j;
+  Py_ssize_t *covc, *covr;  /* 1 if column/row is covered */
   /* these contain 1-based indices, so we can use zero as `none'
    * zstarr: column of a z* in given row
    * zstarc: row of a z* in given column
    * zprimer: column of a z' in given row */
-  size_t *zstarr, *zstarc, *zprimer;
+  Py_ssize_t *zstarr, *zstarc, *zprimer;
 
   /* allocate memory */
-  covc = calloc(n1, sizeof(size_t));
+  covc = calloc(n1, sizeof(Py_ssize_t));
   if (!covc)
     return NULL;
-  zstarc = calloc(n1, sizeof(size_t));
+  zstarc = calloc(n1, sizeof(Py_ssize_t));
   if (!zstarc) {
     free(covc);
     return NULL;
   }
-  covr = calloc(n2, sizeof(size_t));
+  covr = calloc(n2, sizeof(Py_ssize_t));
   if (!covr) {
     free(zstarc);
     free(covc);
     return NULL;
   }
-  zstarr = calloc(n2, sizeof(size_t));
+  zstarr = calloc(n2, sizeof(Py_ssize_t));
   if (!zstarr) {
     free(covr);
     free(zstarc);
     free(covc);
     return NULL;
   }
-  zprimer = calloc(n2, sizeof(size_t));
+  zprimer = calloc(n2, sizeof(Py_ssize_t));
   if (!zprimer) {
     free(zstarr);
     free(covr);
@@ -5087,7 +5159,7 @@ munkers_blackman(size_t n1, size_t n2, double *dists)
 
   /* step 0 (substract minimal distance) and step 1 (find zeroes) */
   for (j = 0; j < n1; j++) {
-    size_t minidx = 0;
+    Py_ssize_t minidx = 0;
     double *col = dists + j;
     double min = *col;
     double *p = col + n1;
@@ -5130,7 +5202,7 @@ munkers_blackman(size_t n1, size_t n2, double *dists)
   while (1) {
     /* step 2 (cover columns containing z*) */
     {
-      size_t nc = 0;
+      Py_ssize_t nc = 0;
       for (j = 0; j < n1; j++) {
         if (zstarc[j]) {
           covc[j] = 1;
@@ -5213,7 +5285,7 @@ munkers_blackman(size_t n1, size_t n2, double *dists)
     step_4:
     i++;
     do {
-      size_t x = i;
+      Py_ssize_t x = i;
 
       i--;
       j = zprimer[i] - 1;  /* move to z' in the same row */
@@ -5221,9 +5293,9 @@ munkers_blackman(size_t n1, size_t n2, double *dists)
       i = zstarc[j];       /* move to z* in the same column */
       zstarc[j] = x;       /* mark the z' as being new z* */
     } while (i);
-    memset(zprimer, 0, n2*sizeof(size_t));
-    memset(covr, 0, n2*sizeof(size_t));
-    memset(covc, 0, n1*sizeof(size_t));
+    memset(zprimer, 0, n2*sizeof(Py_ssize_t));
+    memset(covr, 0, n2*sizeof(Py_ssize_t));
+    memset(covc, 0, n1*sizeof(Py_ssize_t));
   }
 
   free(dists);
@@ -5259,11 +5331,11 @@ munkers_blackman(size_t n1, size_t n2, double *dists)
  * Returns: Zero if @ops seems OK, a nonzero error code otherwise.
  **/
 _LEV_STATIC_PY int
-lev_editops_check_errors(size_t len1, size_t len2,
-                         size_t n, const LevEditOp *ops)
+lev_editops_check_errors(Py_ssize_t len1, Py_ssize_t len2,
+                         Py_ssize_t n, const LevEditOp *ops)
 {
   const LevEditOp *o;
-  size_t i;
+  Py_ssize_t i;
 
   if (!n)
     return LEV_EDIT_ERR_OK;
@@ -5304,11 +5376,11 @@ lev_editops_check_errors(size_t len1, size_t len2,
  * Returns: Zero if @bops seems OK, a nonzero error code otherwise.
  **/
 _LEV_STATIC_PY int
-lev_opcodes_check_errors(size_t len1, size_t len2,
-                         size_t nb, const LevOpCode *bops)
+lev_opcodes_check_errors(Py_ssize_t len1, Py_ssize_t len2,
+                         Py_ssize_t nb, const LevOpCode *bops)
 {
   const LevOpCode *b;
-  size_t i;
+  Py_ssize_t i;
 
   if (!nb)
     return 1;
@@ -5367,12 +5439,12 @@ lev_opcodes_check_errors(size_t len1, size_t len2,
  * and destination strings with their roles exchanged.
  **/
 _LEV_STATIC_PY void
-lev_editops_invert(size_t n, LevEditOp *ops)
+lev_editops_invert(Py_ssize_t n, LevEditOp *ops)
 {
-  size_t i;
+  Py_ssize_t i;
 
   for (i = n; i; i--, ops++) {
-    size_t z;
+    Py_ssize_t z;
 
     z = ops->dpos;
     ops->dpos = ops->spos;
@@ -5400,20 +5472,20 @@ lev_editops_invert(size_t n, LevEditOp *ops)
  *          length is stored in @len.
  **/
 _LEV_STATIC_PY lev_byte*
-lev_editops_apply(size_t len1, const lev_byte *string1,
-                  __attribute__((unused)) size_t len2, const lev_byte *string2,
-                  size_t n, const LevEditOp *ops,
-                  size_t *len)
+lev_editops_apply(Py_ssize_t len1, const lev_byte *string1,
+                  __attribute__((unused)) Py_ssize_t len2, const lev_byte *string2,
+                  Py_ssize_t n, const LevEditOp *ops,
+                  Py_ssize_t *len)
 {
   lev_byte *dst, *dpos;  /* destination string */
   const lev_byte *spos;  /* source string position */
-  size_t i, j;
+  Py_ssize_t i, j;
 
   /* this looks too complex for such a simple task, but note ops is not
    * a complete edit sequence, we have to be able to apply anything anywhere */
   dpos = dst = (lev_byte*)malloc((n + len1)*sizeof(lev_byte));
   if (!dst) {
-    *len = (size_t)(-1);
+    *len = -1;
     return NULL;
   }
   spos = string1;
@@ -5471,21 +5543,21 @@ lev_editops_apply(size_t len1, const lev_byte *string1,
  *          length is stored in @len.
  **/
 _LEV_STATIC_PY lev_wchar*
-lev_u_editops_apply(size_t len1, const lev_wchar *string1,
-                    __attribute__((unused)) size_t len2,
+lev_u_editops_apply(Py_ssize_t len1, const lev_wchar *string1,
+                    __attribute__((unused)) Py_ssize_t len2,
                     const lev_wchar *string2,
-                    size_t n, const LevEditOp *ops,
-                    size_t *len)
+                    Py_ssize_t n, const LevEditOp *ops,
+                    Py_ssize_t *len)
 {
   lev_wchar *dst, *dpos;  /* destination string */
   const lev_wchar *spos;  /* source string position */
-  size_t i, j;
+  Py_ssize_t i, j;
 
   /* this looks too complex for such a simple task, but note ops is not
    * a complete edit sequence, we have to be able to apply anything anywhere */
   dpos = dst = (lev_wchar*)malloc((n + len1)*sizeof(lev_wchar));
   if (!dst) {
-    *len = (size_t)(-1);
+    *len = -1;
     return NULL;
   }
   spos = string1;
@@ -5538,12 +5610,12 @@ lev_u_editops_apply(size_t len1, const lev_wchar *string1,
  *          elementary edit operations, it length is stored in @n.
  **/
 static LevEditOp*
-editops_from_cost_matrix(size_t len1, const lev_byte *string1, size_t off1,
-                         size_t len2, const lev_byte *string2, size_t off2,
-                         size_t *matrix, size_t *n)
+editops_from_cost_matrix(Py_ssize_t len1, const lev_byte *string1, Py_ssize_t off1,
+                         Py_ssize_t len2, const lev_byte *string2, Py_ssize_t off2,
+                         Py_ssize_t *matrix, Py_ssize_t *n)
 {
-  size_t *p;
-  size_t i, j, pos;
+  Py_ssize_t *p;
+  Py_ssize_t i, j, pos;
   LevEditOp *ops;
   int dir = 0;
 
@@ -5555,7 +5627,7 @@ editops_from_cost_matrix(size_t len1, const lev_byte *string1, size_t off1,
   ops = (LevEditOp*)malloc((*n)*sizeof(LevEditOp));
   if (!ops) {
     free(matrix);
-    *n = (size_t)(-1);
+    *n = -1;
     return NULL;
   }
   i = len1 - 1;
@@ -5643,13 +5715,13 @@ editops_from_cost_matrix(size_t len1, const lev_byte *string1, size_t off1,
  *          It is normalized, i.e., keep operations are not included.
  **/
 _LEV_STATIC_PY LevEditOp*
-lev_editops_find(size_t len1, const lev_byte *string1,
-                 size_t len2, const lev_byte *string2,
-                 size_t *n)
+lev_editops_find(Py_ssize_t len1, const lev_byte *string1,
+                 Py_ssize_t len2, const lev_byte *string2,
+                 Py_ssize_t *n)
 {
-  size_t len1o, len2o;
-  size_t i;
-  size_t *matrix; /* cost matrix */
+  Py_ssize_t len1o, len2o;
+  Py_ssize_t i;
+  Py_ssize_t *matrix; /* cost matrix */
 
   /* strip common prefix */
   len1o = 0;
@@ -5671,9 +5743,9 @@ lev_editops_find(size_t len1, const lev_byte *string1,
   len2++;
 
   /* initalize first row and column */
-  matrix = (size_t*)malloc(len1*len2*sizeof(size_t));
+  matrix = (Py_ssize_t*)malloc(len1*len2*sizeof(Py_ssize_t));
   if (!matrix) {
-    *n = (size_t)(-1);
+    *n = -1;
     return NULL;
   }
   for (i = 0; i < len2; i++)
@@ -5683,15 +5755,15 @@ lev_editops_find(size_t len1, const lev_byte *string1,
 
   /* find the costs and fill the matrix */
   for (i = 1; i < len1; i++) {
-    size_t *prev = matrix + (i - 1)*len2;
-    size_t *p = matrix + i*len2;
-    size_t *end = p + len2 - 1;
+    Py_ssize_t *prev = matrix + (i - 1)*len2;
+    Py_ssize_t *p = matrix + i*len2;
+    Py_ssize_t *end = p + len2 - 1;
     const lev_byte char1 = string1[i - 1];
     const lev_byte *char2p = string2;
-    size_t x = i;
+    Py_ssize_t x = i;
     p++;
     while (p <= end) {
-      size_t c3 = *(prev++) + (char1 != *(char2p++));
+      Py_ssize_t c3 = *(prev++) + (char1 != *(char2p++));
       x++;
       if (x > c3)
         x = c3;
@@ -5727,12 +5799,12 @@ lev_editops_find(size_t len1, const lev_byte *string1,
  *          elementary edit operations, it length is stored in @n.
  **/
 static LevEditOp*
-ueditops_from_cost_matrix(size_t len1, const lev_wchar *string1, size_t o1,
-                          size_t len2, const lev_wchar *string2, size_t o2,
-                          size_t *matrix, size_t *n)
+ueditops_from_cost_matrix(Py_ssize_t len1, const lev_wchar *string1, Py_ssize_t o1,
+                          Py_ssize_t len2, const lev_wchar *string2, Py_ssize_t o2,
+                          Py_ssize_t *matrix, Py_ssize_t *n)
 {
-  size_t *p;
-  size_t i, j, pos;
+  Py_ssize_t *p;
+  Py_ssize_t i, j, pos;
   LevEditOp *ops;
   int dir = 0;
 
@@ -5744,7 +5816,7 @@ ueditops_from_cost_matrix(size_t len1, const lev_wchar *string1, size_t o1,
   ops = (LevEditOp*)malloc((*n)*sizeof(LevEditOp));
   if (!ops) {
     free(matrix);
-    *n = (size_t)(-1);
+    *n = -1;
     return NULL;
   }
   i = len1 - 1;
@@ -5832,13 +5904,13 @@ ueditops_from_cost_matrix(size_t len1, const lev_wchar *string1, size_t o1,
  *          It is normalized, i.e., keep operations are not included.
  **/
 _LEV_STATIC_PY LevEditOp*
-lev_u_editops_find(size_t len1, const lev_wchar *string1,
-                   size_t len2, const lev_wchar *string2,
-                   size_t *n)
+lev_u_editops_find(Py_ssize_t len1, const lev_wchar *string1,
+                   Py_ssize_t len2, const lev_wchar *string2,
+                   Py_ssize_t *n)
 {
-  size_t len1o, len2o;
-  size_t i;
-  size_t *matrix; /* cost matrix */
+  Py_ssize_t len1o, len2o;
+  Py_ssize_t i;
+  Py_ssize_t *matrix; /* cost matrix */
 
   /* strip common prefix */
   len1o = 0;
@@ -5860,9 +5932,9 @@ lev_u_editops_find(size_t len1, const lev_wchar *string1,
   len2++;
 
   /* initalize first row and column */
-  matrix = (size_t*)malloc(len1*len2*sizeof(size_t));
+  matrix = (Py_ssize_t*)malloc(len1*len2*sizeof(Py_ssize_t));
   if (!matrix) {
-    *n = (size_t)(-1);
+    *n = -1;
     return NULL;
   }
   for (i = 0; i < len2; i++)
@@ -5872,15 +5944,15 @@ lev_u_editops_find(size_t len1, const lev_wchar *string1,
 
   /* find the costs and fill the matrix */
   for (i = 1; i < len1; i++) {
-    size_t *prev = matrix + (i - 1)*len2;
-    size_t *p = matrix + i*len2;
-    size_t *end = p + len2 - 1;
+    Py_ssize_t *prev = matrix + (i - 1)*len2;
+    Py_ssize_t *p = matrix + i*len2;
+    Py_ssize_t *end = p + len2 - 1;
     const lev_wchar char1 = string1[i - 1];
     const lev_wchar *char2p = string2;
-    size_t x = i;
+    Py_ssize_t x = i;
     p++;
     while (p <= end) {
-      size_t c3 = *(prev++) + (char1 != *(char2p++));
+      Py_ssize_t c3 = *(prev++) + (char1 != *(char2p++));
       x++;
       if (x > c3)
         x = c3;
@@ -5911,10 +5983,10 @@ lev_u_editops_find(size_t len1, const lev_wchar *string1,
  *          size is stored in @n.
  **/
 _LEV_STATIC_PY LevEditOp*
-lev_opcodes_to_editops(size_t nb, const LevOpCode *bops,
-                       size_t *n, int keepkeep)
+lev_opcodes_to_editops(Py_ssize_t nb, const LevOpCode *bops,
+                       Py_ssize_t *n, int keepkeep)
 {
-  size_t i;
+  Py_ssize_t i;
   const LevOpCode *b;
   LevEditOp *ops, *o;
 
@@ -5926,15 +5998,15 @@ lev_opcodes_to_editops(size_t nb, const LevOpCode *bops,
   b = bops;
   if (keepkeep) {
     for (i = nb; i; i--, b++) {
-      size_t sd = b->send - b->sbeg;
-      size_t dd = b->dend - b->dbeg;
+      Py_ssize_t sd = b->send - b->sbeg;
+      Py_ssize_t dd = b->dend - b->dbeg;
       *n += (sd > dd ? sd : dd);
     }
   }
   else {
     for (i = nb; i; i--, b++) {
-      size_t sd = b->send - b->sbeg;
-      size_t dd = b->dend - b->dbeg;
+      Py_ssize_t sd = b->send - b->sbeg;
+      Py_ssize_t dd = b->dend - b->dbeg;
       *n += (b->type != LEV_EDIT_KEEP ? (sd > dd ? sd : dd) : 0);
     }
   }
@@ -5942,12 +6014,12 @@ lev_opcodes_to_editops(size_t nb, const LevOpCode *bops,
   /* convert */
   o = ops = (LevEditOp*)malloc((*n)*sizeof(LevEditOp));
   if (!ops) {
-    *n = (size_t)(-1);
+    *n = -1;
     return NULL;
   }
   b = bops;
   for (i = nb; i; i--, b++) {
-    size_t j;
+    Py_ssize_t j;
 
     switch (b->type) {
       case LEV_EDIT_KEEP:
@@ -5988,7 +6060,7 @@ lev_opcodes_to_editops(size_t nb, const LevOpCode *bops,
       break;
     }
   }
-  assert((size_t)(o - ops) == *n);
+  assert((Py_ssize_t)(o - ops) == *n);
 
   return ops;
 }
@@ -6010,10 +6082,10 @@ lev_opcodes_to_editops(size_t nb, const LevOpCode *bops,
  *          its length is stored in @nb.
  **/
 _LEV_STATIC_PY LevOpCode*
-lev_editops_to_opcodes(size_t n, const LevEditOp *ops, size_t *nb,
-                       size_t len1, size_t len2)
+lev_editops_to_opcodes(Py_ssize_t n, const LevEditOp *ops, Py_ssize_t *nb,
+                       Py_ssize_t len1, Py_ssize_t len2)
 {
-  size_t nbl, i, spos, dpos;
+  Py_ssize_t nbl, i, spos, dpos;
   const LevEditOp *o;
   LevOpCode *bops, *b;
   LevEditType type;
@@ -6072,7 +6144,7 @@ lev_editops_to_opcodes(size_t n, const LevEditOp *ops, size_t *nb,
   /* convert */
   b = bops = (LevOpCode*)malloc(nbl*sizeof(LevOpCode));
   if (!bops) {
-    *nb = (size_t)(-1);
+    *nb = -1;
     return NULL;
   }
   o = ops;
@@ -6138,7 +6210,7 @@ lev_editops_to_opcodes(size_t n, const LevEditOp *ops, size_t *nb,
     b->dend = len2;
     b++;
   }
-  assert((size_t)(b - bops) == nbl);
+  assert((Py_ssize_t)(b - bops) == nbl);
 
   *nb = nbl;
   return bops;
@@ -6162,20 +6234,20 @@ lev_editops_to_opcodes(size_t n, const LevEditOp *ops, size_t *nb,
  *          is stored in @len.
  **/
 _LEV_STATIC_PY lev_byte*
-lev_opcodes_apply(size_t len1, const lev_byte *string1,
-                  size_t len2, const lev_byte *string2,
-                  size_t nb, const LevOpCode *bops,
-                  size_t *len)
+lev_opcodes_apply(Py_ssize_t len1, const lev_byte *string1,
+                  Py_ssize_t len2, const lev_byte *string2,
+                  Py_ssize_t nb, const LevOpCode *bops,
+                  Py_ssize_t *len)
 {
   lev_byte *dst, *dpos;  /* destination string */
   const lev_byte *spos;  /* source string position */
-  size_t i;
+  Py_ssize_t i;
 
   /* this looks too complex for such a simple task, but note ops is not
    * a complete edit sequence, we have to be able to apply anything anywhere */
   dpos = dst = (lev_byte*)malloc((len1 + len2)*sizeof(lev_byte));
   if (!dst) {
-    *len = (size_t)(-1);
+    *len = -1;
     return NULL;
   }
   spos = string1;
@@ -6222,20 +6294,20 @@ lev_opcodes_apply(size_t len1, const lev_byte *string1,
  *          is stored in @len.
  **/
 _LEV_STATIC_PY lev_wchar*
-lev_u_opcodes_apply(size_t len1, const lev_wchar *string1,
-                    size_t len2, const lev_wchar *string2,
-                    size_t nb, const LevOpCode *bops,
-                    size_t *len)
+lev_u_opcodes_apply(Py_ssize_t len1, const lev_wchar *string1,
+                    Py_ssize_t len2, const lev_wchar *string2,
+                    Py_ssize_t nb, const LevOpCode *bops,
+                    Py_ssize_t *len)
 {
   lev_wchar *dst, *dpos;  /* destination string */
   const lev_wchar *spos;  /* source string position */
-  size_t i;
+  Py_ssize_t i;
 
   /* this looks too complex for such a simple task, but note ops is not
    * a complete edit sequence, we have to be able to apply anything anywhere */
   dpos = dst = (lev_wchar*)malloc((len1 + len2)*sizeof(lev_wchar));
   if (!dst) {
-    *len = (size_t)(-1);
+    *len = -1;
     return NULL;
   }
   spos = string1;
@@ -6275,12 +6347,12 @@ lev_u_opcodes_apply(size_t len1, const lev_wchar *string1,
  * and destination strings with their roles exchanged.
  **/
 _LEV_STATIC_PY void
-lev_opcodes_invert(size_t nb, LevOpCode *bops)
+lev_opcodes_invert(Py_ssize_t nb, LevOpCode *bops)
 {
-  size_t i;
+  Py_ssize_t i;
 
   for (i = nb; i; i--, bops++) {
-    size_t z;
+    Py_ssize_t z;
 
     z = bops->dbeg;
     bops->dbeg = bops->sbeg;
@@ -6307,13 +6379,13 @@ lev_opcodes_invert(size_t nb, LevOpCode *bops)
  *          stored in @nmblocks.
  **/
 _LEV_STATIC_PY LevMatchingBlock*
-lev_editops_matching_blocks(size_t len1,
-                            size_t len2,
-                            size_t n,
+lev_editops_matching_blocks(Py_ssize_t len1,
+                            Py_ssize_t len2,
+                            Py_ssize_t n,
                             const LevEditOp *ops,
-                            size_t *nmblocks)
+                            Py_ssize_t *nmblocks)
 {
-  size_t nmb, i, spos, dpos;
+  Py_ssize_t nmb, i, spos, dpos;
   LevEditType type;
   const LevEditOp *o;
   LevMatchingBlock *mblocks, *mb;
@@ -6371,7 +6443,7 @@ lev_editops_matching_blocks(size_t len1,
   /* fill the info */
   mb = mblocks = (LevMatchingBlock*)malloc(nmb*sizeof(LevOpCode));
   if (!mblocks) {
-    *nmblocks = (size_t)(-1);
+    *nmblocks = -1;
     return NULL;
   }
   o = ops;
@@ -6429,7 +6501,7 @@ lev_editops_matching_blocks(size_t len1,
     mb->len = len1 - spos;
     mb++;
   }
-  assert((size_t)(mb - mblocks) == nmb);
+  assert((Py_ssize_t)(mb - mblocks) == nmb);
 
   *nmblocks = nmb;
   return mblocks;
@@ -6449,13 +6521,13 @@ lev_editops_matching_blocks(size_t len1,
  *          stored in @nmblocks.
  **/
 _LEV_STATIC_PY LevMatchingBlock*
-lev_opcodes_matching_blocks(size_t len1,
-                            __attribute__((unused)) size_t len2,
-                            size_t nb,
+lev_opcodes_matching_blocks(Py_ssize_t len1,
+                            __attribute__((unused)) Py_ssize_t len2,
+                            Py_ssize_t nb,
                             const LevOpCode *bops,
-                            size_t *nmblocks)
+                            Py_ssize_t *nmblocks)
 {
-  size_t nmb, i;
+  Py_ssize_t nmb, i;
   const LevOpCode *b;
   LevMatchingBlock *mblocks, *mb;
 
@@ -6478,7 +6550,7 @@ lev_opcodes_matching_blocks(size_t len1,
   /* convert */
   mb = mblocks = (LevMatchingBlock*)malloc(nmb*sizeof(LevOpCode));
   if (!mblocks) {
-    *nmblocks = (size_t)(-1);
+    *nmblocks = -1;
     return NULL;
   }
   b = bops;
@@ -6500,7 +6572,7 @@ lev_opcodes_matching_blocks(size_t len1,
       mb++;
     }
   }
-  assert((size_t)(mb - mblocks) == nmb);
+  assert((Py_ssize_t)(mb - mblocks) == nmb);
 
   *nmblocks = nmb;
   return mblocks;
@@ -6517,17 +6589,19 @@ lev_opcodes_matching_blocks(size_t len1,
  *
  * Returns: The total cost.
  **/
-_LEV_STATIC_PY size_t
-lev_editops_total_cost(size_t n,
+/*
+_LEV_STATIC_PY Py_ssize_t
+lev_editops_total_cost(Py_ssize_t n,
                        const LevEditOp *ops)
 {
-  size_t i, sum = 0;
+  Py_ssize_t i, sum = 0;
 
   for (i = n; i; i--, ops++)
     sum += !!ops->type;
 
   return sum;
 }
+*/
 
 /**
  * lev_editops_normalize:
@@ -6542,12 +6616,13 @@ lev_editops_total_cost(size_t n,
  * Returns: A newly allocated array of normalized edit operations, its length
  *          is stored to @nnorm.
  **/
+/*
 _LEV_STATIC_PY LevEditOp*
-lev_editops_normalize(size_t n,
+lev_editops_normalize(Py_ssize_t n,
                       const LevEditOp *ops,
-                      size_t *nnorm)
+                      Py_ssize_t *nnorm)
 {
-  size_t nx, i;
+  Py_ssize_t nx, i;
   const LevEditOp *o;
   LevEditOp *opsnorm, *on;
 
@@ -6575,6 +6650,7 @@ lev_editops_normalize(size_t n,
 
   return opsnorm;
 }
+*/
 
 /**
  * lev_opcodes_total_cost:
@@ -6587,11 +6663,12 @@ lev_editops_normalize(size_t n,
  *
  * Returns: The total cost.
  **/
-_LEV_STATIC_PY size_t
-lev_opcodes_total_cost(size_t nb,
+/*
+_LEV_STATIC_PY Py_ssize_t
+lev_opcodes_total_cost(Py_ssize_t nb,
                        const LevOpCode *bops)
 {
-  size_t i, sum = 0;
+  Py_ssize_t i, sum = 0;
 
   for (i = nb; i; i--, bops++) {
     switch (bops->type) {
@@ -6611,6 +6688,7 @@ lev_opcodes_total_cost(size_t nb,
 
   return sum;
 }
+*/
 /* }}} */
 
 /****************************************************************************
@@ -6621,16 +6699,16 @@ lev_opcodes_total_cost(size_t nb,
 
 /*
 _LEV_STATIC_PY lev_byte*
-lev_weighted_average(size_t len1,
+lev_weighted_average(Py_ssize_t len1,
                      const lev_byte* string1,
-                     size_t len2,
+                     Py_ssize_t len2,
                      const lev_byte* string2,
-                     size_t n,
+                     Py_ssize_t n,
                      const LevEditOp *ops,
                      LevAveragingType avtype,
-                     size_t total_cost,
+                     Py_ssize_t total_cost,
                      double alpha,
-                     size_t *len)
+                     Py_ssize_t *len)
 {
   return NULL;
 }

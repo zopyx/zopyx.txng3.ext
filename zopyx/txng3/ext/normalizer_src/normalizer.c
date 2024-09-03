@@ -178,14 +178,8 @@ static struct PyMethodDef Normalizer_methods[] =
 static char NormalizerType__doc__[] = "Normalizer object";
 
 static PyTypeObject NormalizerType = {
-#ifndef PY3K
-                                         PyObject_HEAD_INIT(NULL)
-                                         0,                            /*ob_size*/
-                                         "Normalizer",                 /*tp_name*/
-#else
-                                         PyObject_HEAD_INIT(NULL)
-                                         "Normalizer",                 /*tp_name*/
-#endif
+                                         PyVarObject_HEAD_INIT(NULL, 0)
+                                         "Normalizer",                 /*tp_yname*/
                                          sizeof(Normalizer),           /*tp_basicsize*/
                                          0,                            /*tp_itemsize*/
                                          /* methods */

@@ -150,10 +150,10 @@ static char StemmerType__doc__[] = "Stemmer object";
 
 static PyTypeObject StemmerType = {
 #ifndef PY3K
-  PyObject_HEAD_INIT (NULL) 0,	/*ob_size */
+  PyVarObject_HEAD_INIT(NULL, 0)
   "Stemmer",					/*tp_name */
 #else
-  PyObject_HEAD_INIT (NULL)
+  PyVarObject_HEAD_INIT(NULL, 0)
   "Stemmer",					/*tp_name */
 #endif
   sizeof (Stemmer),				/*tp_basicsize */
