@@ -1,7 +1,7 @@
 4.1.0 (unreleased)
 ------------------
 
-- Add support for Python 3.7, 3.8 and 3.9.
+- Add support for Python 3.7, 3.8, 3.9, 3.10, 3.11 and 3.12.
 - Fix building on Python 3 with certain compilers.
 - Fix certain distance computation functions on Python 3.
 - Fix all deprecation warnings on Python 3.

@@ -313,14 +313,8 @@ static struct PyMethodDef Splitter_methods[] =
 static char SplitterType__doc__[] = "splitter instance for strings or unicode strings";
 
 static PyTypeObject SplitterType = {
-#ifndef PY3K
-                                       PyObject_HEAD_INIT(NULL)
-                                       0,                                 /*ob_size*/
+                                       PyVarObject_HEAD_INIT(NULL, 0)
                                        "Splitter",                    /*tp_name*/
-#else
-                                       PyObject_HEAD_INIT(NULL)
-                                       "Splitter",                    /*tp_name*/
-#endif
                                        sizeof(Splitter),              /*tp_basicsize*/
                                        0,                                 /*tp_itemsize*/
                                        /* methods */
