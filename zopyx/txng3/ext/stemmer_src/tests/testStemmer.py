@@ -109,23 +109,3 @@ class SimpleStemmerTests(unittest.TestCase):
 #    def testLovins(self):
 #        self.doTest('lovins', 'utf-8')
 
-def test_suite():
-    s = unittest.TestSuite()
-    s.addTest(unittest.makeSuite(SimpleStemmerTests))
-    return s
-
-def main():
-   unittest.TextTestRunner().run(test_suite())
-
-def debug():
-   test_suite().debug()
-
-def pdebug():
-    import pdb
-    pdb.run('debug()')
-
-if __name__=='__main__':
-   if len(sys.argv) > 1:
-      globals()[sys.argv[1]]()
-   else:
-      main()
