@@ -25,6 +25,7 @@ version = '5.0.0'
 setup(name="zopyx.txng3.ext",
       version=version,
       zip_safe=False,
+      extras_require=dict(test=['pytest>=7.0', 'pytest-cov>=4.0', 'hypothesis>=6.0']),
           ext_modules=[
 
             Extension("zopyx.txng3.ext.normalizer",

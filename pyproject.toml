@@ -32,6 +32,7 @@ classifiers = [
 test = [
     "pytest>=7.0",
     "pytest-cov>=4.0",
+    "hypothesis>=6.0",
 ]
 
 [tool.pytest.ini_options]
