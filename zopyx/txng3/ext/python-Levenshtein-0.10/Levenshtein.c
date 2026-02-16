@@ -103,14 +103,17 @@
 #include <assert.h>
 #include "Levenshtein.h"
 
-#if PY_MAJOR_VERSION >= 3
 #define PY3K
 #define INT_FROM_LONG(x) PyLong_FromLong(x)
 #define INT_CHECK(x) PyLong_Check(x)
-#else
-#define INT_FROM_LONG(x) PyInt_FromLong(x)
-#define INT_CHECK(x) PyInt_Check(x)
-#endif
+
+/* Python 3.12+ compatibility: redefine deprecated Unicode API */
+#define PyUnicode_GET_SIZE PyUnicode_GET_LENGTH
+/* Note: PyUnicode_AS_UNICODE now requires manual memory management via PyUnicode_AsUCS4Copy */
+/* Callers must use PyMem_Free() on the returned pointer */
+#define PyUnicode_AS_UNICODE(op) PyUnicode_AsUCS4Copy(op)
+#define PyUnicode_FromUnicode(u, size) PyUnicode_FromKindAndData(PyUnicode_4BYTE_KIND, u, size)
+
 /* FIXME: inline avaliability should be solved in setup.py, somehow, or
  * even better in Python.h, like const is...
  * this should inline at least with gcc and msvc */
@@ -663,20 +666,27 @@ levenshtein_common(PyObject *args, const char *name, size_t xcost,
   else if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
       && PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
     Py_UNICODE *string1, *string2;
+    size_t d;
 
     len1 = PyUnicode_GET_SIZE(arg1);
     len2 = PyUnicode_GET_SIZE(arg2);
     *lensum = len1 + len2;
     string1 = PyUnicode_AS_UNICODE(arg1);
     string2 = PyUnicode_AS_UNICODE(arg2);
-    {
-      size_t d = lev_u_edit_distance(len1, string1, len2, string2, xcost);
-      if (d == (size_t)(-1)) {
-        PyErr_NoMemory();
-        return -1;
-      }
-      return d;
+    if (!string1 || !string2) {
+      PyMem_Free(string1);
+      PyMem_Free(string2);
+      PyErr_NoMemory();
+      return -1;
     }
+    d = lev_u_edit_distance(len1, string1, len2, string2, xcost);
+    PyMem_Free(string1);
+    PyMem_Free(string2);
+    if (d == (size_t)(-1)) {
+      PyErr_NoMemory();
+      return -1;
+    }
+    return d;
   }
   else {
     PyErr_Format(PyExc_TypeError,
@@ -752,7 +762,15 @@ hamming_py(PyObject *self, PyObject *args)
     }
     string1 = PyUnicode_AS_UNICODE(arg1);
     string2 = PyUnicode_AS_UNICODE(arg2);
+    if (!string1 || !string2) {
+      PyMem_Free(string1);
+      PyMem_Free(string2);
+      PyErr_NoMemory();
+      return NULL;
+    }
     dist = lev_u_hamming_distance(len1, string1, string2);
+    PyMem_Free(string1);
+    PyMem_Free(string2);
     return INT_FROM_LONG(dist);
   }
   else {
@@ -785,12 +803,22 @@ jaro_py(PyObject *self, PyObject *args)
   else if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
       && PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
     Py_UNICODE *string1, *string2;
+    double result;
 
     len1 = PyUnicode_GET_SIZE(arg1);
     len2 = PyUnicode_GET_SIZE(arg2);
     string1 = PyUnicode_AS_UNICODE(arg1);
     string2 = PyUnicode_AS_UNICODE(arg2);
-    return PyFloat_FromDouble(lev_u_jaro_ratio(len1, string1, len2, string2));
+    if (!string1 || !string2) {
+      PyMem_Free(string1);
+      PyMem_Free(string2);
+      PyErr_NoMemory();
+      return NULL;
+    }
+    result = lev_u_jaro_ratio(len1, string1, len2, string2);
+    PyMem_Free(string1);
+    PyMem_Free(string2);
+    return PyFloat_FromDouble(result);
   }
   else {
     PyErr_Format(PyExc_TypeError,
@@ -837,14 +865,22 @@ jaro_winkler_py(PyObject *self, PyObject *args)
   else if (PyObject_TypeCheck(arg1, &PyUnicode_Type)
       && PyObject_TypeCheck(arg2, &PyUnicode_Type)) {
     Py_UNICODE *string1, *string2;
+    double result;
 
     len1 = PyUnicode_GET_SIZE(arg1);
     len2 = PyUnicode_GET_SIZE(arg2);
     string1 = PyUnicode_AS_UNICODE(arg1);
     string2 = PyUnicode_AS_UNICODE(arg2);
-    return PyFloat_FromDouble(lev_u_jaro_winkler_ratio(len1, string1,
-                                                       len2, string2,
-                                                       pfweight));
+    if (!string1 || !string2) {
+      PyMem_Free(string1);
+      PyMem_Free(string2);
+      PyErr_NoMemory();
+      return NULL;
+    }
+    result = lev_u_jaro_winkler_ratio(len1, string1, len2, string2, pfweight);
+    PyMem_Free(string1);
+    PyMem_Free(string2);
+    return PyFloat_FromDouble(result);
   }
   else {
     PyErr_Format(PyExc_TypeError,
@@ -1022,12 +1058,18 @@ median_improve_common(PyObject *args, const char *name, MedianImproveFuncs foo)
   else if (stringtype == 1) {
     Py_UNICODE *s = PyUnicode_AS_UNICODE(arg1);
     size_t l = PyUnicode_GET_SIZE(arg1);
-    Py_UNICODE *medstr = foo.u(l, s, n, sizes, strings, weights, &len);
-    if (!medstr && len)
+    Py_UNICODE *medstr;
+    if (!s) {
       result = PyErr_NoMemory();
-    else {
-      result = PyUnicode_FromUnicode(medstr, len);
-      free(medstr);
+    } else {
+      medstr = foo.u(l, s, n, sizes, strings, weights, &len);
+      PyMem_Free(s);
+      if (!medstr && len)
+        result = PyErr_NoMemory();
+      else {
+        result = PyUnicode_FromUnicode(medstr, len);
+        free(medstr);
+      }
     }
   }
   else
@@ -1176,11 +1218,21 @@ extract_stringlist(PyObject *list, const char *name,
     }
 
     strings[0] = PyUnicode_AS_UNICODE(first);
+    if (!strings[0]) {
+      free(strings);
+      free(sizes);
+      PyErr_NoMemory();
+      return -1;
+    }
     sizes[0] = PyUnicode_GET_SIZE(first);
     for (i = 1; i < n; i++) {
       PyObject *item = PySequence_Fast_GET_ITEM(list, i);
 
       if (!PyObject_TypeCheck(item, &PyUnicode_Type)) {
+        size_t j;
+        for (j = 0; j < i; j++) {
+          PyMem_Free(strings[j]);
+        }
         free(strings);
         free(sizes);
         PyErr_Format(PyExc_TypeError,
@@ -1188,6 +1240,16 @@ extract_stringlist(PyObject *list, const char *name,
         return -1;
       }
       strings[i] = PyUnicode_AS_UNICODE(item);
+      if (!strings[i]) {
+        size_t j;
+        for (j = 0; j < i; j++) {
+          PyMem_Free(strings[j]);
+        }
+        free(strings);
+        free(sizes);
+        PyErr_NoMemory();
+        return -1;
+      }
       sizes[i] = PyUnicode_GET_SIZE(item);
     }
 
@@ -1283,6 +1345,12 @@ setseq_common(PyObject *args, const char *name, SetSeqFuncs foo,
   stringtype2 = extract_stringlist(strlist2, name, n2, &sizes2, &strings2);
   Py_DECREF(strseq2);
   if (stringtype2 < 0) {
+    if (stringtype1 == 1) {
+      size_t i;
+      for (i = 0; i < n1; i++) {
+        PyMem_Free(((Py_UNICODE**)strings1)[i]);
+      }
+    }
     free(sizes1);
     free(strings1);
     return r;
@@ -1299,9 +1367,17 @@ setseq_common(PyObject *args, const char *name, SetSeqFuncs foo,
       PyErr_NoMemory();
   }
   else if (stringtype1 == 1) {
+    size_t i;
     r = foo.u(n1, sizes1, strings1, n2, sizes2, strings2);
     if (r < 0.0)
       PyErr_NoMemory();
+    /* Free individual Unicode strings allocated by PyUnicode_AS_UNICODE */
+    for (i = 0; i < n1; i++) {
+      PyMem_Free(((Py_UNICODE**)strings1)[i]);
+    }
+    for (i = 0; i < n2; i++) {
+      PyMem_Free(((Py_UNICODE**)strings2)[i]);
+    }
   }
   else
     PyErr_Format(PyExc_SystemError, "%s internal error", name);
@@ -1371,13 +1447,13 @@ extract_editops(PyObject *list)
       free(ops);
       return NULL;
     }
-    ops[i].spos = (size_t)PyInt_AS_LONG(item);
+    ops[i].spos = (size_t)PyLong_AsLong(item);
     item = PyTuple_GET_ITEM(tuple, 2);
     if (!INT_CHECK(item)) {
       free(ops);
       return NULL;
     }
-    ops[i].dpos = (size_t)PyInt_AS_LONG(item);
+    ops[i].dpos = (size_t)PyLong_AsLong(item);
   }
   return ops;
 }
@@ -1413,25 +1489,25 @@ extract_opcodes(PyObject *list)
       free(bops);
       return NULL;
     }
-    bops[i].sbeg = (size_t)PyInt_AS_LONG(item);
+    bops[i].sbeg = (size_t)PyLong_AsLong(item);
     item = PyTuple_GET_ITEM(tuple, 2);
     if (!INT_CHECK(item)) {
       free(bops);
       return NULL;
     }
-    bops[i].send = (size_t)PyInt_AS_LONG(item);
+    bops[i].send = (size_t)PyLong_AsLong(item);
     item = PyTuple_GET_ITEM(tuple, 3);
     if (!INT_CHECK(item)) {
       free(bops);
       return NULL;
     }
-    bops[i].dbeg = (size_t)PyInt_AS_LONG(item);
+    bops[i].dbeg = (size_t)PyLong_AsLong(item);
     item = PyTuple_GET_ITEM(tuple, 4);
     if (!INT_CHECK(item)) {
       free(bops);
       return NULL;
     }
-    bops[i].dend = (size_t)PyInt_AS_LONG(item);
+    bops[i].dend = (size_t)PyLong_AsLong(item);
   }
   return bops;
 }
@@ -1484,7 +1560,7 @@ static size_t
 get_length_of_anything(PyObject *object)
 {
   if (INT_CHECK(object)) {
-    long int len = PyInt_AS_LONG(object);
+    long int len = PyLong_AsLong(object);
     if (len < 0)
       len = -1;
     return (size_t)len;
@@ -1580,7 +1656,15 @@ editops_py(PyObject *self, PyObject *args)
     len2 = PyUnicode_GET_SIZE(arg2);
     string1 = PyUnicode_AS_UNICODE(arg1);
     string2 = PyUnicode_AS_UNICODE(arg2);
+    if (!string1 || !string2) {
+      PyMem_Free(string1);
+      PyMem_Free(string2);
+      PyErr_NoMemory();
+      return NULL;
+    }
     ops = lev_u_editops_find(len1, string1, len2, string2, &n);
+    PyMem_Free(string1);
+    PyMem_Free(string2);
   }
   else {
     PyErr_Format(PyExc_TypeError,
@@ -1698,7 +1782,15 @@ opcodes_py(PyObject *self, PyObject *args)
     len2 = PyUnicode_GET_SIZE(arg2);
     string1 = PyUnicode_AS_UNICODE(arg1);
     string2 = PyUnicode_AS_UNICODE(arg2);
+    if (!string1 || !string2) {
+      PyMem_Free(string1);
+      PyMem_Free(string2);
+      PyErr_NoMemory();
+      return NULL;
+    }
     ops = lev_u_editops_find(len1, string1, len2, string2, &n);
+    PyMem_Free(string1);
+    PyMem_Free(string2);
   }
   else {
     PyErr_Format(PyExc_TypeError,
@@ -1835,17 +1927,27 @@ apply_edit_py(PyObject *self, PyObject *args)
     len2 = PyUnicode_GET_SIZE(arg2);
     string1 = PyUnicode_AS_UNICODE(arg1);
     string2 = PyUnicode_AS_UNICODE(arg2);
+    if (!string1 || !string2) {
+      PyMem_Free(string1);
+      PyMem_Free(string2);
+      PyErr_NoMemory();
+      return NULL;
+    }
 
     if ((ops = extract_editops(list)) != NULL) {
       if (lev_editops_check_errors(len1, len2, n, ops)) {
         PyErr_Format(PyExc_ValueError,
                      "apply_edit edit oprations are invalid or inapplicable");
         free(ops);
+        PyMem_Free(string1);
+        PyMem_Free(string2);
         return NULL;
       }
       s = lev_u_editops_apply(len1, string1, len2, string2,
                               n, ops, &len);
       free(ops);
+      PyMem_Free(string1);
+      PyMem_Free(string2);
       if (!s && len)
         return PyErr_NoMemory();
       result = PyUnicode_FromUnicode(s, len);
@@ -1857,11 +1959,15 @@ apply_edit_py(PyObject *self, PyObject *args)
         PyErr_Format(PyExc_ValueError,
                      "apply_edit edit oprations are invalid or inapplicable");
         free(bops);
+        PyMem_Free(string1);
+        PyMem_Free(string2);
         return NULL;
       }
       s = lev_u_opcodes_apply(len1, string1, len2, string2,
                               n, bops, &len);
       free(bops);
+      PyMem_Free(string1);
+      PyMem_Free(string2);
       if (!s && len)
         return PyErr_NoMemory();
       result = PyUnicode_FromUnicode(s, len);
@@ -1869,6 +1975,8 @@ apply_edit_py(PyObject *self, PyObject *args)
       return result;
     }
 
+    PyMem_Free(string1);
+    PyMem_Free(string2);
     if (!PyErr_Occurred())
       PyErr_Format(PyExc_TypeError,
                    "apply_edit first argument must be "
@@ -1986,6 +2094,7 @@ module_init(void)
     opcode_names[i].len = strlen(opcode_names[i].cstring);
   }
   lev_init_rng(0);
+  return module;
 }
 
 #ifdef PY3K

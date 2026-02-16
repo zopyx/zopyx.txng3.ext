@@ -1,3 +1,16 @@
+5.0.0 (2026/02/16)
+------------------
+- BREAKING: Dropped Python 2.7, 3.4, 3.5, 3.6, 3.7, 3.8, 3.9 support
+- Added support for Python 3.10, 3.11, 3.12, 3.13
+- Migrated from pkg_resources to PEP 420 implicit namespace packages
+- Migrated from nose to pytest for testing
+- Fixed deprecated PyInt_* C API calls (removed in Python 3.10+)
+- Fixed deprecated Unicode C API (PyUnicode_AS_UNICODE, PyUnicode_GET_SIZE, etc.)
+- Updated PyTypeObject initialization to use PyVarObject_HEAD_INIT
+- Removed all Python 2 compatibility code from C extensions
+- Updated build system with pyproject.toml
+- Version bumped to 5.0.0 to indicate breaking changes
+
 4.0.0 (2017/05/22)
 ------------------
 - Added support for Python 3.4, 3.5 and 3.6.

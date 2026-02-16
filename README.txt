@@ -23,11 +23,10 @@ License
 Supported Python versions
 -------------------------
 
-- Python 2.7
-- Python 3.4
-- Python 3.5
-- Python 3.6
-- PyPy
+- Python 3.10
+- Python 3.11
+- Python 3.12
+- Python 3.13
 
 Contact
 -------

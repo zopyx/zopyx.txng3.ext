@@ -9,13 +9,8 @@
 #include "Python.h"
 #include <ctype.h>
 #include "dict.h"
-#if PY_MAJOR_VERSION >= 3
-
 #define PY3K
 #define INT_FROM_LONG(x) PyLong_FromLong(x)
-#else
-#define INT_FROM_LONG(x) PyInt_FromLong(x)
-#endif
 
 #ifndef min
 #define min(a,b) ((a)<(b)?(a):(b))
@@ -225,11 +220,19 @@ Splitter_split(Splitter *self, PyObject *args)
             Py_XDECREF(doc1);
         }
     } else if (PyUnicode_Check(doc)) {
-        PyObject *doc1; // create a *real* copy since we need to modify the string
-        doc1 = PyUnicode_FromUnicode(NULL, PyUnicode_GET_SIZE(doc));
-        Py_UNICODE_COPY(PyUnicode_AS_UNICODE(doc1),
-                        PyUnicode_AS_UNICODE(doc),
-                        PyUnicode_GET_SIZE(doc));
+        PyObject *doc1;
+
+        // Apply case folding if needed using Python's built-in function
+        if (self->casefolding) {
+            doc1 = PyObject_CallMethod(doc, "lower", NULL);
+            if (!doc1) {
+                return NULL;
+            }
+        } else {
+            doc1 = doc;
+            Py_INCREF(doc1);
+        }
+
         splitUnicodeString(self, doc1);
         Py_DECREF(doc1);
     } else {
@@ -311,14 +314,8 @@ static struct PyMethodDef Splitter_methods[] =
 static char SplitterType__doc__[] = "splitter instance for strings or unicode strings";
 
 static PyTypeObject SplitterType = {
-#ifndef PY3K
-                                       PyObject_HEAD_INIT(NULL)
-                                       0,                                 /*ob_size*/
+                                       PyVarObject_HEAD_INIT(NULL, 0)
                                        "Splitter",                    /*tp_name*/
-#else
-                                       PyObject_HEAD_INIT(NULL)
-                                       "Splitter",                    /*tp_name*/
-#endif
                                        sizeof(Splitter),              /*tp_basicsize*/
                                        0,                                 /*tp_itemsize*/
                                        /* methods */
@@ -437,21 +434,24 @@ int splitString(Splitter *self,PyObject *doc)
 int splitUnicodeString(Splitter *self,PyObject *doc)
 {
     PyObject *word ;
-    Py_UNICODE *s;
-    int i, inside_word=0, start=0, len;
+    int i, inside_word=0, start=0;
+    Py_ssize_t len;
     register int value, next_value;
+    int kind;
+    void *data;
 
-    s = PyUnicode_AS_UNICODE(doc);       // start of unicode string
-    len = PyUnicode_GET_SIZE(doc);
+    // Get the Unicode kind and data pointer (Python 3.3+ compact API)
+    kind = PyUnicode_KIND(doc);
+    data = PyUnicode_DATA(doc);
+    len = PyUnicode_GET_LENGTH(doc);
 
+    for (i=0; i<len; i++) {
+        Py_UCS4 c;
 
-    for (i=0; i<len; i++,s++) {
-        register Py_UNICODE c;
+        // Read character at position i
+        c = PyUnicode_READ(kind, data, i);
 
-        c = *s;
-
-        if (self->casefolding)
-            *s = Py_UNICODE_TOLOWER(c);
+        // Note: case folding is now done before calling this function
 
         value = inode_get(self, c);
 
@@ -470,7 +470,13 @@ int splitUnicodeString(Splitter *self,PyObject *doc)
         } else {
 
             if (value == IS_SEPARATOR) {
-                register Py_UNICODE next_c = *(s+1);
+                Py_UCS4 next_c;
+
+                if (i + 1 < len) {
+                    next_c = PyUnicode_READ(kind, data, i + 1);
+                } else {
+                    next_c = 0;  // End of string
+                }
 
                 next_value = inode_get(self, next_c);
 
@@ -483,9 +489,11 @@ int splitUnicodeString(Splitter *self,PyObject *doc)
 
                 if (next_value == IS_TRASH) {
                     if (! (i-start<2 && ! self->single_chars)) {
-                        word = Py_BuildValue("u#", s-(i-start), min(i-start, self->max_len));
-                        PyList_Append(self->list, word);
-                        Py_XDECREF(word);
+                        word = PyUnicode_Substring(doc, start, start + min(i-start, self->max_len));
+                        if (word) {
+                            PyList_Append(self->list, word);
+                            Py_DECREF(word);
+                        }
                     }
                     start = i;
                     inside_word = 0;
@@ -495,9 +503,11 @@ int splitUnicodeString(Splitter *self,PyObject *doc)
 
             else if (value==IS_TRASH) {
                 if (! (i-start<2 && ! self->single_chars)) {
-                    word = Py_BuildValue("u#", s-(i-start), min(i-start, self->max_len));
-                    PyList_Append(self->list, word);
-                    Py_XDECREF(word);
+                    word = PyUnicode_Substring(doc, start, start + min(i-start, self->max_len));
+                    if (word) {
+                        PyList_Append(self->list, word);
+                        Py_DECREF(word);
+                    }
                 }
                 start = i;
                 inside_word = 0;
@@ -507,9 +517,11 @@ int splitUnicodeString(Splitter *self,PyObject *doc)
 
     if (inside_word) {
         if (! (i-start<2 && ! self->single_chars)) {
-            word = Py_BuildValue("u#", s-(i-start), min(i-start, self->max_len));
-            PyList_Append(self->list, word);
-            Py_XDECREF(word);
+            word = PyUnicode_Substring(doc, start, start + min(i-start, self->max_len));
+            if (word) {
+                PyList_Append(self->list, word);
+                Py_DECREF(word);
+            }
         }
     }
 
