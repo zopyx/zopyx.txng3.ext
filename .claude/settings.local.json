@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git -C /Users/ajung/src/zopyx.txng3.ext log --oneline --all)",
+      "Bash(tree:*)",
+      "Bash(ls:*)",
+      "Bash(grep:*)",
+      "Bash(source:*)",
+      "Bash(python setup.py clean:*)",
+      "Bash(uv pip install:*)",
+      "Bash(python setup.py build_ext --inplace:*)",
+      "Bash(python -c:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(pytest:*)",
+      "Bash(git checkout:*)"
+    ]
+  }
+}

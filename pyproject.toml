@@ -1,0 +1,42 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "zopyx.txng3.ext"
+version = "5.0.0"
+description = "Helper modules for TextIndexNG3 (Snowball stemmer, normalizer, splitter, etc.)"
+readme = "README.txt"
+requires-python = ">=3.10"
+license = {text = "ZPL 2.1"}
+authors = [
+    {name = "Andreas Jung", email = "info@zopyx.com"}
+]
+maintainers = [
+    {name = "Andreas Jung, ZOPYX Ltd. & Co. KG", email = "info@zopyx.com"}
+]
+dependencies = ["setuptools"]
+urls = {Homepage = "http://sf.net/projects/textindexng/"}
+keywords = ["text", "index", "search", "stemming", "fulltext"]
+classifiers = [
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Operating System :: OS Independent",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["zopyx/txng3/ext"]
+python_files = "test*.py"
+python_classes = "Test*"
+python_functions = "test*"
+addopts = "-v --tb=short"
